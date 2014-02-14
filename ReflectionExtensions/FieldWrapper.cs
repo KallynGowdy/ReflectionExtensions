@@ -79,6 +79,18 @@ namespace ReflectionExtensions
             return this[reference];
         }
 
+        public T GetValue<T>(object reference)
+        {
+            try
+            {
+                return (T)GetValue(reference);
+            }
+            catch (InvalidCastException e)
+            {
+                throw new TypeArgumentException("The returned value cannot be cast into the given type.", "T", e);
+            }
+        }
+
         public void SetValue(object reference, object value)
         {
             this[reference] = value;

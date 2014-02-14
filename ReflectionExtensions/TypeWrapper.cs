@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -70,27 +71,42 @@ namespace ReflectionExtensions
 
         public IEnumerable<IMember> Members
         {
-            get { return RepresentedType.GetMembers().Select(m => m.Wrap()).Where(m => m != null); }
+            get { return Fields.OfType<IMember>().Concat(Properties).Concat(Methods); }
         }
 
         public IEnumerable<IField> Fields
         {
-            get { return RepresentedType.GetFields().Select(f => f.Wrap()); }
+            get { return RepresentedType.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(f => f.Wrap()); }
         }
 
         public IEnumerable<IProperty> Properties
         {
-            get { return RepresentedType.GetProperties().Select(p => p.Wrap()); }
+            get { return RepresentedType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Wrap()); }
         }
 
         public IEnumerable<IMethod> Methods
         {
-            get { return RepresentedType.GetMethods().Select(m => m.Wrap()); }
+            get
+            {
+                return RepresentedType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => !m.IsSpecialName).Select(m => m.Wrap());
+            }
         }
 
         public IEnumerable<IStorageMember> StorageMembers
         {
             get { return Fields.OfType<IStorageMember>().Concat(Properties); }
+        }
+
+
+        public IEnumerable<IMethod> Constructors
+        {
+            get { return RepresentedType.GetConstructors(BindingFlags.Public | BindingFlags.Instance).Select(c => c.Wrap()); }
+        }
+
+
+        public IEnumerable<IMethod> GetMethods(string name)
+        {
+            return Methods.Where(m => m.Name.Equals(name));
         }
     }
 }

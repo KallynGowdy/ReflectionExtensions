@@ -12,7 +12,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,33 +21,38 @@ using System.Threading.Tasks;
 namespace ReflectionExtensions
 {
     /// <summary>
-    /// Defines an abstraction for members of a type.
+    /// Defines an interface for an object that contains information about a parameter.
     /// </summary>
-    public interface IMember
+    public interface IParameter : IMember
     {
         /// <summary>
-        /// Gets the name of the member.
+        /// Gets the method that this parameter belongs to.
         /// </summary>
-        string Name
+        IMethod Method
         {
             get;
         }
 
         /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
+        /// Gets the position in the list of arguments that is given to the method.
         /// </summary>
-        Type ReturnType
+        int Position
         {
             get;
         }
 
         /// <summary>
-        /// Gets the type that this member belongs to.
+        /// Gets whether this parameter has a default value.
         /// </summary>
-        Type EnclosingType
+        bool HasDefaultValue
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the default value of the parameter.
+        /// </summary>
+        object DefaultValue
         {
             get;
         }

@@ -60,7 +60,7 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets a list of members from this type.
+        /// Gets a list of public non-static members from this type.
         /// </summary>
         IEnumerable<IMember> Members
         {
@@ -68,7 +68,7 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets a list of fields from this type.
+        /// Gets a list of public non-static fields from this type.
         /// </summary>
         IEnumerable<IField> Fields
         {
@@ -76,7 +76,7 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets a list of properties that belong to this type.
+        /// Gets a list of public non-static properties that belong to this type.
         /// </summary>
         IEnumerable<IProperty> Properties
         {
@@ -84,7 +84,7 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets a list of methods that belong to this type.
+        /// Gets a list of public non-static not auto-generated methods that belong to this type.
         /// </summary>
         IEnumerable<IMethod> Methods
         {
@@ -92,9 +92,24 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets a list of members that retrieve/set some value.
+        /// Gets a list of public non-static methods based on their names.
+        /// </summary>
+        /// <param name="name">The case sensitive name of the methods to retrieve.</param>
+        /// <returns></returns>
+        IEnumerable<IMethod> GetMethods(string name);
+
+        /// <summary>
+        /// Gets a list of public non-static members that retrieve/set some value.
         /// </summary>
         IEnumerable<IStorageMember> StorageMembers
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets a list of public non-static constructors that can create this type.
+        /// </summary>
+        IEnumerable<IMethod> Constructors
         {
             get;
         }

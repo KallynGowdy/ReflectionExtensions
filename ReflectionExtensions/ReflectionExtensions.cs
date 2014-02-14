@@ -36,21 +36,46 @@ namespace ReflectionExtensions
             return new TypeWrapper(type);
         }
 
+        /// <summary>
+        /// Wraps the given System.Reflection.PropertyInfo object into a new ReflectionExtensions.IProperty object.
+        /// </summary>
+        /// <param name="property">The property to wrap.</param>
+        /// <returns>Returns a new ReflectionExtensions.IProperty object.</returns>
         public static IProperty Wrap(this PropertyInfo property)
         {
             return new PropertyWrapper(property);
         }
 
-        public static IMethod Wrap(this MethodInfo method)
+        /// <summary>
+        /// Wraps the given System.Reflection.MethodBase object into a new ReflectionExtensions.IMethod object.
+        /// </summary>
+        /// <param name="method">The method to wrap.</param>
+        /// <returns>Returns a new ReflectionExtensions.IMethod object.</returns>
+        public static IMethod Wrap(this MethodBase method)
         {
             return new MethodWrapper(method);
         }
 
+        /// <summary>
+        /// Wraps the given System.Reflection.FieldInfo object into a new ReflectionExtensions.IField object.
+        /// </summary>
+        /// <param name="field">The field to wrap.</param>
+        /// <returns>Returns a new ReflectionExtensions.IField object.</returns>
         public static IField Wrap(this FieldInfo field)
         {
             return new FieldWrapper(field);
         }
 
+        public static IParameter Wrap(this ParameterInfo parameter)
+        {
+            return new PrameterWrapper(parameter);
+        }
+
+        /// <summary>
+        /// Wraps the given System.Reflection.MemberInfo object into a new ReflectionExtensions.IMember object.
+        /// </summary>
+        /// <param name="member">The member to wrap.</param>
+        /// <returns>Returns a new ReflectionExtensions.IMember object.</returns>
         public static IMember Wrap(this MemberInfo member)
         {
             if (member is FieldInfo)
@@ -61,9 +86,57 @@ namespace ReflectionExtensions
             {
                 return new PropertyWrapper((PropertyInfo)member);
             }
-            else if (member is MethodInfo)
+            else if (member is MethodBase)
             {
-                return new MethodWrapper((MethodInfo)member);
+                return new MethodWrapper((MethodBase)member);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets a method from the type that has the given name with the given argument.
+        /// </summary>
+        /// <typeparam name="T1">The type of the first argument that the method takes.</typeparam>
+        /// <param name="type">The type that the method should be retrieved from.</param>
+        /// <param name="name">The case-sensitive name of the method to retreive.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if the given type or string is null.</exception>
+        /// <returns>Returns a ReflectionExtensions.IMethod object that represents the retrieved method. Returns null if the method could not be
+        /// found.</returns>
+        public static IMethod GetMethod<T1>(this IType type, string name)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+            else if (name == null)
+            {
+                throw new ArgumentNullException("name");
+            }
+
+            return GetMethod(type, name, new[] { typeof(T1) });
+        }
+
+        private static IMethod GetMethod(IType type, string name, Type[] parameterTypes)
+        {
+            foreach (var method in type.GetMethods(name))
+            {
+                var parameters = method.Parameters.ToArray();
+                if (parameters.Length == parameterTypes.Length)
+                {
+                    bool good = true;
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        if (!parameters[i].ReturnType.IsAssignableFrom(parameterTypes[i]))
+                        {
+                            good = false;
+                            break;
+                        }
+                    }
+                    if (good)
+                    {
+                        return method;
+                    }
+                }
             }
             return null;
         }

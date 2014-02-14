@@ -31,7 +31,7 @@ namespace ReflectionExtensions
         /// Creates a new wrapper around the given method.
         /// </summary>
         /// <param name="method">The method to augment.</param>
-        public MethodWrapper(MethodInfo method)
+        public MethodWrapper(MethodBase method)
         {
             this.WrappedMethod = method;
         }
@@ -39,7 +39,7 @@ namespace ReflectionExtensions
         /// <summary>
         /// Gets the method that this object is wrapped around.
         /// </summary>
-        public MethodInfo WrappedMethod
+        public MethodBase WrappedMethod
         {
             get;
             private set;
@@ -94,12 +94,52 @@ namespace ReflectionExtensions
 
         public Type ReturnType
         {
-            get { return WrappedMethod.ReturnType; }
+            get
+            {
+                if (WrappedMethod is MethodInfo)
+                {
+                    return ((MethodInfo)WrappedMethod).ReturnType;
+                }
+                else if (WrappedMethod is ConstructorInfo)
+                {
+                    return WrappedMethod.ReflectedType;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public Type EnclosingType
         {
             get { return WrappedMethod.ReflectedType; }
+        }
+
+
+        public T Invoke<T>(object reference, object arguments, T defaultValue = default(T))
+        {
+            return (T)(Invoke(reference, arguments) ?? defaultValue);
+        }
+
+        public object Invoke(object reference, object arguments)
+        {
+            var parameters = arguments != null ? arguments.GetType().Wrap().StorageMembers.Where(a => a.CanRead).Join(WrappedMethod.GetParameters(), a => a.Name, p => p.Name, (a, p) => new { Argument = a, Parameter = p }) : null;
+            if (parameters != null)
+            {
+                parameters = parameters.OrderBy(v => v.Parameter.Position);
+                return WrappedMethod.Invoke(reference, parameters.Select(v => v.Argument.GetValue(arguments)).ToArray());
+            }
+            else
+            {
+                return WrappedMethod.Invoke(reference, null);
+            }            
+        }
+
+
+        public IEnumerable<IParameter> Parameters
+        {
+            get { throw new NotImplementedException(); }
         }
     }
 }

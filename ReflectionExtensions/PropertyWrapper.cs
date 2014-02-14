@@ -77,14 +77,28 @@ namespace ReflectionExtensions
 
         public object GetValue(object reference)
         {
-            return PropertyInfo.GetValue(reference);
+            if (CanRead)
+            {
+                //if (this.ReturnType.IsAssignableFrom(reference.GetType()))
+                //{
+                    return PropertyInfo.GetValue(reference);
+                //}
+                //else
+                //{
+                //    throw new ArgumentException("The given object must be assignable to this properties type.", "reference");
+                //}
+            }
+            else
+            {
+                throw new InvalidOperationException("The value cannot be read from this property.");
+            }
+
         }
 
         public void SetValue(object reference, object value)
         {
             PropertyInfo.SetValue(reference, value);
         }
-
 
         public object this[object reference]
         {
@@ -105,12 +119,20 @@ namespace ReflectionExtensions
 
         public IMethod SetMethod
         {
-            get { throw new NotImplementedException(); }
+            get { return PropertyInfo.SetMethod.Wrap(); }
         }
 
-        public AccessModifier Access
+
+        public T GetValue<T>(object reference)
         {
-            get { throw new NotImplementedException(); }
+            try
+            {
+                return (T)GetValue(reference);
+            }
+            catch (InvalidCastException e)
+            {
+                throw new TypeArgumentException("The returned value could not be cast into the given type.", "T", e);
+            }
         }
     }
 }
