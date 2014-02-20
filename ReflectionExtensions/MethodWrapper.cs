@@ -119,7 +119,26 @@ namespace ReflectionExtensions
 
         public T Invoke<T>(object reference, object arguments, T defaultValue = default(T))
         {
-            return (T)(Invoke(reference, arguments) ?? defaultValue);
+            try
+            {
+                return (T)(Invoke(reference, arguments) ?? defaultValue);
+            }
+            catch (InvalidCastException e)
+            {
+                throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(T)), "T", e);
+            }
+        }
+
+        public TReturn Invoke<TReturn>(object reference, params object[] arguments)
+        {
+            try
+            {
+                return (TReturn)(WrappedMethod.Invoke(reference, arguments) ?? default(TReturn));
+            }
+            catch (InvalidCastException e)
+            {
+                throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(TReturn)), "TReturn", e);
+            }
         }
 
         public object Invoke(object reference, object arguments)
@@ -135,7 +154,6 @@ namespace ReflectionExtensions
                 return WrappedMethod.Invoke(reference, null);
             }            
         }
-
 
         public IEnumerable<IParameter> Parameters
         {

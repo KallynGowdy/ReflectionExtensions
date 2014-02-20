@@ -61,13 +61,23 @@ namespace ReflectionExtensions
         /// Invokes this method using the given object's members as arguments.
         /// </summary>
         /// <typeparam name="T">The type to cast the returned value into.</typeparam>
-        /// <param name="reference">A reference to the object that contains this method.</param>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
         /// <param name="arguments">An object whose members define the values to pass to the method.</param>
         /// <param name="defaultValue">The value to return if the return type of this method is void.</param>
-        /// <exception cref="System.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
         /// <returns>Returns the value returned from the method cast into the given type. Returns the default value if the return type is void.</returns>
         T Invoke<T>(object reference, object arguments, T defaultValue = default(T));
-        
+
+        /// <summary>
+        /// Invokes this method using the given objects as arguments.
+        /// </summary>
+        /// <typeparam name="TReturn">The type to cast the returned value into.</typeparam>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
+        /// <param name="arguments">A list of arguments whose order and type matches the methods signature.</param>
+        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <returns>Returns the value returned from the method cast into the given type. Returns default(<typeparamref name="TReturn"/>) value if the return type is void.</returns>
+        TReturn Invoke<TReturn>(object reference, params object[] arguments);
+
         /// <summary>
         /// Invokes this method using the given object's members as arguments.
         /// </summary>

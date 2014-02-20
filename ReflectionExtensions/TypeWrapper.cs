@@ -108,5 +108,20 @@ namespace ReflectionExtensions
         {
             return Methods.Where(m => m.Name.Equals(name));
         }
+
+        public TReturn Invoke<TReturn>(string name, object reference, params object[] arguments)
+        {
+            name.ThrowIfNull("name");
+            reference.ThrowIfNull("reference");
+            IMethod method = GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.Equals(a.GetType())));
+            if (method == null)
+            {
+                throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
+            }
+            else
+            {
+                return method.Invoke<TReturn>(reference, arguments);
+            }
+        }
     }
 }

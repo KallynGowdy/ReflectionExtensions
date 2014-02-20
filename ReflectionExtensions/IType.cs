@@ -99,6 +99,24 @@ namespace ReflectionExtensions
         IEnumerable<IMethod> GetMethods(string name);
 
         /// <summary>
+        /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
+        /// </summary>
+        /// <typeparam name="TReturn">The type that the returned value should be cast into.</typeparam>
+        /// <param name="name">The case-sensitive name of the method to invoke.</param>
+        /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
+        /// <param name="arguments">A list of objects to use as arguments for the invocation.</param>
+        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
+        /// <exception cref="System.MissingMethodException">
+        /// Thrown if the method to invoke does not exist. That is, if there is no method with the given name or is no method
+        /// matches the given arguments.
+        /// </exception>
+        /// <exception cref="System.ArgumentException">Thrown if the given reference's type does not equal the type that is described by this value.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if the given name or reference is null.</exception>
+        /// <returns>Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns void.</returns>
+        TReturn Invoke<TReturn>(string name, object reference, params object[] arguments);
+        
+
+        /// <summary>
         /// Gets a list of public non-static members that retrieve/set some value.
         /// </summary>
         IEnumerable<IStorageMember> StorageMembers
