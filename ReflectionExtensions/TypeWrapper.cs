@@ -69,6 +69,16 @@ namespace ReflectionExtensions
             get { return RepresentedType.IsAbstract; }
         }
 
+        public string Name
+        {
+            get { return RepresentedType.Name; }
+        }
+
+        public string FullName
+        {
+            get { return RepresentedType.FullName; }
+        }
+
         public IEnumerable<IMember> Members
         {
             get { return Fields.OfType<IMember>().Concat(Properties).Concat(Methods); }
@@ -113,7 +123,7 @@ namespace ReflectionExtensions
         {
             name.ThrowIfNull("name");
             reference.ThrowIfNull("reference");
-            IMethod method = GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.Equals(a.GetType())));
+            IMethod method = GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
             if (method == null)
             {
                 throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
@@ -122,6 +132,44 @@ namespace ReflectionExtensions
             {
                 return method.Invoke<TReturn>(reference, arguments);
             }
+        }
+
+        public override int GetHashCode()
+        {
+            return Util.HashCode(FullName, IsClass, IsStruct, IsAbstract, Assembly);
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IType)
+            {
+                return Equals((IType)obj);
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+        }
+
+        public bool Equals(IType other)
+        {
+            return other != null &&
+                this.FullName.Equals(other.FullName) &&
+                this.IsClass == other.IsClass &&
+                this.IsStruct == other.IsStruct &&
+                this.IsAbstract == other.IsAbstract &&
+                this.Assembly.Equals(other.Assembly);
+        }
+
+
+        public IMethod GetMethod(string name)
+        {
+            return Methods.SingleOrDefault(m => m.Name.Equals(name));
         }
     }
 }

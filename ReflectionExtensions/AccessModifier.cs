@@ -23,7 +23,6 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines a list of access modifiers for a member of a type.
     /// </summary>
-    [Flags]
     public enum AccessModifier
     {
         /// <summary>

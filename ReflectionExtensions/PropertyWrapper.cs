@@ -134,5 +134,48 @@ namespace ReflectionExtensions
                 throw new TypeArgumentException("The returned value could not be cast into the given type.", "T", e);
             }
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IMember)
+            {
+                return Equals((IMember)obj);
+            }
+            else if (obj is IProperty)
+            {
+                return Equals((IProperty)obj);
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+        }
+
+        public bool Equals(IMember other)
+        {
+            if (other is IProperty)
+            {
+                return Equals((IProperty)other);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool Equals(IProperty other)
+        {
+            return other != null &&
+                other.Name.Equals(this.Name) &&
+                other.ReturnType.Equals(this.ReturnType) &&
+                other.CanRead == this.CanRead &&
+                other.CanWrite == this.CanWrite &&
+                other.EnclosingType.Equals(this.EnclosingType);
+        }
+
+        public override int GetHashCode()
+        {
+            return Util.HashCode(Name, ReturnType, CanRead, CanWrite, EnclosingType);
+        }
     }
 }

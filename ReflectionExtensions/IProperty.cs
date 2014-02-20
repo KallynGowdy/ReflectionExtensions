@@ -23,7 +23,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for properties that belong to a type.
     /// </summary>
-    public interface IProperty : IStorageMember
+    public interface IProperty : IStorageMember, IEquatable<IProperty>
     {
         /// <summary>
         /// Gets the get method of this property.

@@ -23,7 +23,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for an object that contains information about a parameter.
     /// </summary>
-    public interface IParameter : IMember
+    public interface IParameter : IMember, IEquatable<IParameter>
     {
         /// <summary>
         /// Gets the method that this parameter belongs to.

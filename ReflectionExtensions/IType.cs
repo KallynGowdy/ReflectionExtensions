@@ -25,8 +25,24 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for an object that describes a type.
     /// </summary>
-    public interface IType
+    public interface IType : IEquatable<IType>
     {
+        /// <summary>
+        /// Gets the simple name of the type.
+        /// </summary>
+        string Name
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the fully qualified name of the type.
+        /// </summary>
+        string FullName
+        {
+            get;
+        }
+
         /// <summary>
         /// Gets the assembly that this type belongs to.
         /// </summary>
@@ -90,6 +106,16 @@ namespace ReflectionExtensions
         {
             get;
         }
+
+
+        /// <summary>
+        /// Gets the single method that has the given name.
+        /// </summary>
+        /// <param name="name">The name of the method to retrieve.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if the given name is null.</exception>
+        /// <exception cref="System.InvalidOperationException">Thrown if there is more than one method with the given name.</exception>
+        /// <returns>Returns the method or null if it doesn't exist.</returns>
+        IMethod GetMethod(string name);
 
         /// <summary>
         /// Gets a list of public non-static methods based on their names.

@@ -23,7 +23,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for a method that belongs to a type.
     /// </summary>
-    public interface IMethod : IMember, IAccessModifiers
+    public interface IMethod : IMember, IAccessModifiers, IEquatable<IMethod>
     {
         /// <summary>
         /// Gets whether this method is virtual.

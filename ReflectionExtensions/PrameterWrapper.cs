@@ -67,5 +67,52 @@ namespace ReflectionExtensions
         {
             get { return WrappedParameter.Member.ReflectedType; }
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0}({1})", this.Name, this.ReturnType);
+        }
+
+        public override int GetHashCode()
+        {
+            return Util.HashCode(Name, Position, ReturnType, EnclosingType);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IParameter)
+            {
+                return Equals((IParameter)obj);
+            }
+            else if (obj is IMember)
+            {
+                return Equals((IMember)obj);
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+        }
+
+        public bool Equals(IMember other)
+        {
+            if (other is IParameter)
+            {
+                return Equals((IParameter)other);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool Equals(IParameter other)
+        {
+            return other != null &&
+                this.Name.Equals(other.Name) &&
+                this.Position.Equals(other.Position) &&
+                this.ReturnType.Equals(other.ReturnType) &&
+                this.EnclosingType.Equals(other.EnclosingType);
+        }
     }
 }

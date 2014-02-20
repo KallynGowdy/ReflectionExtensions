@@ -24,7 +24,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an abstraction for members of a type.
     /// </summary>
-    public interface IMember
+    public interface IMember : IEquatable<IMember>
     {
         /// <summary>
         /// Gets the name of the member.

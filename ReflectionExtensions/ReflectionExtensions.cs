@@ -66,6 +66,11 @@ namespace ReflectionExtensions
             return new FieldWrapper(field);
         }
 
+        /// <summary>
+        /// Wraps the given System.Reflection.ParameterInfo object into a new ReflectionExtensions.IParameter object.
+        /// </summary>
+        /// <param name="parameter">The parameter to wrap.</param>
+        /// <returns>Returns a new ReflectionExtensions.IParameter object.</returns>
         public static IParameter Wrap(this ParameterInfo parameter)
         {
             return new PrameterWrapper(parameter);
@@ -94,7 +99,7 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets a method from the type that has the given name with the given argument.
+        /// Gets a method from the type that has the given name with arguments of the given types.
         /// </summary>
         /// <typeparam name="T1">The type of the first argument that the method takes.</typeparam>
         /// <param name="type">The type that the method should be retrieved from.</param>
@@ -116,29 +121,51 @@ namespace ReflectionExtensions
             return GetMethod(type, name, new[] { typeof(T1) });
         }
 
+        /// <summary>
+        /// Gets a method from the type that has the given name with arguments of the given types.
+        /// </summary>
+        /// <typeparam name="T1">The type of the first argument that the method takes.</typeparam>
+        /// <typeparam name="T2">The type of the second argument that the method takes.</typeparam>
+        /// <param name="type">The type that the method should be retrieved from.</param>
+        /// <param name="name">The case-sensitive name of the method to retrieve.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown </exception>
+        /// <returns>Returns a ReflectionExtensions.IMethod object that represents the retrieved method. Returns null if the method could not be found.</returns>
+        public static IMethod GetMethod<T1, T2>(this IType type, string name)
+        {
+            type.ThrowIfNull("type");
+            name.ThrowIfNull("name");
+
+            return GetMethod(type, name, new[] { typeof(T1), typeof(T2) });
+        }
+
         private static IMethod GetMethod(IType type, string name, Type[] parameterTypes)
         {
-            foreach (var method in type.GetMethods(name))
-            {
-                var parameters = method.Parameters.ToArray();
-                if (parameters.Length == parameterTypes.Length)
-                {
-                    bool good = true;
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        if (!parameters[i].ReturnType.IsAssignableFrom(parameterTypes[i]))
-                        {
-                            good = false;
-                            break;
-                        }
-                    }
-                    if (good)
-                    {
-                        return method;
-                    }
-                }
-            }
-            return null;
+            return type.GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)));
+
+            //foreach (var method in type.GetMethods(name))
+            //{
+                
+                
+            //    var parameters = method.Parameters.ToArray();
+
+            //    if (parameters.Length == parameterTypes.Length)
+            //    {
+            //        bool good = true;
+            //        for (int i = 0; i < parameters.Length; i++)
+            //        {
+            //            if (!parameters[i].ReturnType.IsAssignableFrom(parameterTypes[i]))
+            //            {
+            //                good = false;
+            //                break;
+            //            }
+            //        }
+            //        if (good)
+            //        {
+            //            return method;
+            //        }
+            //    }
+            //}
+            //return null;
         }
     }
 }

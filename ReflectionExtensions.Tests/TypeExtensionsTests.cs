@@ -41,12 +41,34 @@ namespace ReflectionExtensions.Tests
 
             foreach (var storage in t.StorageMembers)
             {
-                Console.WriteLine("{0}: {1}", storage.Name, storage.CanRead ? storage[this] : null);
+                Console.WriteLine("{0}: {1}", storage.Name, storage.CanRead ? storage[this] : "Null");
             }
 
-            var toStringMethod = t.Methods.First(a => a.Name.Equals("Equals"));
+            var equalsMethod = t.Methods.First(a => a.Name.Equals("Equals"));
 
-            Console.WriteLine(toStringMethod.Invoke<bool>(this, new { obj = this }));
+            //this.Equals(obj: this);
+            Console.WriteLine("Equals(obj: this): {0}", equalsMethod.Invoke<bool>(this, new { obj = this }));
+
+            //this.Equals(this);
+            Console.WriteLine("Equals(this): {0}", t.Invoke<bool>("Equals", this, this));
+
+            //Test IType equality
+            IType other = typeof(TypeExtensionsTests).Wrap();
+
+            Debug.Assert(t.Equals(other) && t.Equals((object)other) && other.Equals(t) && other.Equals((object)t));
+            Console.WriteLine("Type Equality: (IType) {0}, (Object) {1}", t.Equals(other), t.Equals((object)other));
+
+            int tHash = t.GetHashCode();
+            int otherHash = other.GetHashCode();
+            Debug.Assert(tHash == otherHash);
+
+            Console.WriteLine("Hash Code Equality: {0}, {1}, Equal: {2}", tHash, otherHash, tHash == otherHash);
+
+            //Reference Equality
+            Debug.Assert(other != t);
+
+            Console.WriteLine("t and other refer to {0} instances", other != t ? "different" : "the same");
         }
+
     }
 }

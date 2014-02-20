@@ -152,12 +152,60 @@ namespace ReflectionExtensions
             else
             {
                 return WrappedMethod.Invoke(reference, null);
-            }            
+            }
         }
 
         public IEnumerable<IParameter> Parameters
         {
-            get { throw new NotImplementedException(); }
+            get { return WrappedMethod.GetParameters().Select(p => p.Wrap()); }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}({1})", this.Name, string.Join(", ", this.Parameters));
+        }
+
+        public override int GetHashCode()
+        {
+            return Util.HashCode(Name, ReturnType, EnclosingType, Access, Parameters);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IMethod)
+            {
+                return Equals((IMethod)obj);
+            }
+            else if (obj is IMember)
+            {
+                return Equals((IMember)obj);
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+        }
+
+        public bool Equals(IMember other)
+        {
+            if (other is IMethod)
+            {
+                return Equals((IMethod)other);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool Equals(IMethod other)
+        {
+            return other != null &&
+                this.Name.Equals(other.Name) &&
+                this.Access.Equals(other.Access) &&
+                this.ReturnType.Equals(other.ReturnType) &&
+                this.EnclosingType.Equals(other.EnclosingType) &&
+                this.Parameters.SequenceEqual(other.Parameters);
         }
     }
 }

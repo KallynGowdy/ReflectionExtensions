@@ -137,5 +137,54 @@ namespace ReflectionExtensions
         {
             get { return WrappedField.ReflectedType; }
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IField)
+            {
+                return Equals((IField)obj);
+            }
+            else if (obj is IMember)
+            {
+                return Equals((IMember)obj);
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+        }
+
+        public bool Equals(IMember other)
+        {
+            if (other is IField)
+            {
+                return Equals((IField)other);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool Equals(IField other)
+        {
+            return other != null &&
+                other.Name.Equals(this.Name) &&
+                other.IsConst == this.IsConst &&
+                other.ReturnType.Equals(this.ReturnType) &&
+                other.CanRead == this.CanRead &&
+                other.CanWrite == this.CanWrite &&
+                other.EnclosingType.Equals(this.EnclosingType);
+        }
+
+        public override int GetHashCode()
+        {
+            return Util.HashCode(Name, IsConst, ReturnType, CanRead, CanWrite, EnclosingType);
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

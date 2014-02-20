@@ -24,7 +24,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for an object that is a field.
     /// </summary>
-    public interface IField : IStorageMember
+    public interface IField : IStorageMember, IEquatable<IField>
     {
         /// <summary>
         /// Gets whether this field is constant.
