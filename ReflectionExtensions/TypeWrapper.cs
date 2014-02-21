@@ -94,6 +94,9 @@ namespace ReflectionExtensions
             get { return RepresentedType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Wrap()); }
         }
 
+        /// <summary>
+        /// Gets a list of public non-static not auto-generated methods that belong to this type.
+        /// </summary>
         public IEnumerable<IMethod> Methods
         {
             get
@@ -134,6 +137,38 @@ namespace ReflectionExtensions
             }
         }
 
+
+        /// <summary>
+        /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
+        /// </summary>
+        /// <typeparam name="TReturn">The type that the returned value should be cast into.</typeparam>
+        /// <param name="name">The case-sensitive name of the method to invoke.</param>
+        /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
+        /// <param name="arguments">A list of objects to use as arguments for the invocation.</param>
+        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
+        /// <exception cref="System.MissingMethodException">
+        /// Thrown if the method to invoke does not exist. That is, if there is no method with the given name or no method
+        /// matches the given arguments.
+        /// </exception>
+        /// <exception cref="System.ArgumentException">Thrown if the given reference's type does not equal the type that is described by this value.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if the given name or reference is null.</exception>
+        /// <returns>Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns null or void.</returns>
+        public TReturn Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
+        {
+            name.ThrowIfNull("name");
+            reference.ThrowIfNull("reference");
+
+            IMethod method = GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
+            if (method == null)
+            {
+                throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
+            }
+            else
+            {
+                return method.Invoke<TReturn>(reference, genericArguments, arguments);
+            }
+        }
+
         public override int GetHashCode()
         {
             return Util.HashCode(FullName, IsClass, IsStruct, IsAbstract, Assembly);
@@ -170,6 +205,52 @@ namespace ReflectionExtensions
         public IMethod GetMethod(string name)
         {
             return Methods.SingleOrDefault(m => m.Name.Equals(name));
+        }
+
+
+        public bool IsGenericType
+        {
+            get { return RepresentedType.IsGenericType; }
+        }
+
+        public IEnumerable<IGenericParameter> GenericArguments
+        {
+            get { return RepresentedType.GetGenericArguments().Select(a => new GenericParameter(a)); }
+        }
+
+        public IType BaseType
+        {
+            get { return RepresentedType.BaseType.Wrap(); }
+        }
+
+        /// <summary>
+        /// Determines if this type inherits from the given base type.
+        /// </summary>
+        /// <param name="base">The type to check inheritance from.</param>
+        /// <returns>Returns true if this type inherits from the given base type, otherwise false.</returns>
+        public bool InheritsFrom(IType @base)
+        {
+            @base.ThrowIfNull("base");
+
+            IType objectType = typeof(object).Wrap();
+
+            //Every object inherits from System.Object
+            if (@base.Equals(objectType))
+            {
+                return true;
+            }
+
+            IType baseType = this.BaseType;
+
+            //Otherwise, go through the inheritance chain and check for the type.
+            while (baseType != null && !baseType.Equals(objectType))
+            {
+                if (baseType.Equals(@base))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

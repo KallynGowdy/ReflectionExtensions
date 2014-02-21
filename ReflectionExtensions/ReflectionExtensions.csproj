@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>ExtendedDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -40,11 +41,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessModifier.cs" />
+    <Compile Include="ConstructorConstraint.cs" />
     <Compile Include="FieldWrapper.cs" />
+    <Compile Include="GenericParameter.cs" />
     <Compile Include="IAccessModifiers.cs" />
+    <Compile Include="IConstructorConstraint.cs" />
     <Compile Include="IField.cs" />
+    <Compile Include="IGenericConstraint.cs" />
+    <Compile Include="IGenericMethod.cs" />
+    <Compile Include="IGenericParameter.cs" />
+    <Compile Include="IInheritanceConstraint.cs" />
     <Compile Include="IMember.cs" />
     <Compile Include="IMethod.cs" />
+    <Compile Include="InheritanceConstraint.cs" />
     <Compile Include="IParameter.cs" />
     <Compile Include="IProperty.cs" />
     <Compile Include="IStorageMember.cs" />

@@ -22,37 +22,17 @@ using System.Threading.Tasks;
 namespace ReflectionExtensions
 {
     /// <summary>
-    /// Defines an abstraction for members of a type.
+    /// Defines an interface that defines a generic constraint that requires that a type has a certian constructor.
     /// </summary>
-    public interface IMember : IEquatable<IMember>
+    public interface IConstructorConstraint : IGenericConstraint, IEquatable<IConstructorConstraint>
     {
         /// <summary>
-        /// Gets the name of the member.
+        /// Gets the the parameters that are required to be passed to the constructor.
         /// </summary>
-        string Name
+        IEnumerable<IParameter> RequiredParameters
         {
             get;
         }
 
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        Type ReturnType
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        Type EnclosingType
-        {
-            get;
-        }
     }
 }

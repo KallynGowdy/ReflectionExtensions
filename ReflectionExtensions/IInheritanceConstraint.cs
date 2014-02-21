@@ -12,7 +12,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,35 +21,14 @@ using System.Threading.Tasks;
 namespace ReflectionExtensions
 {
     /// <summary>
-    /// Defines an abstraction for members of a type.
+    /// Defines an interface for a generic constraint that requires that a type inherits from some other type.
     /// </summary>
-    public interface IMember : IEquatable<IMember>
+    public interface IInheritanceConstraint : IGenericConstraint, IEquatable<IInheritanceConstraint>
     {
         /// <summary>
-        /// Gets the name of the member.
+        /// Gets the type that is required to be in the inheritance chain of the generic argument.
         /// </summary>
-        string Name
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        Type ReturnType
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        Type EnclosingType
+        IType RequiredType
         {
             get;
         }

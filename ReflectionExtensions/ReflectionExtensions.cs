@@ -27,7 +27,7 @@ namespace ReflectionExtensions
     public static class ReflectionExtensions
     {
         /// <summary>
-        /// Wraps the given type in a new ReflectionExtensions.IType object that provides usefull functionality.
+        /// Wraps the given type in a new ReflectionExtensions.IType object that provides useful functionality.
         /// </summary>
         /// <param name="type">The type to wrap.</param>
         /// <returns>Returns a new ReflectionExtensions.IType object.</returns>

@@ -23,6 +23,13 @@ namespace ReflectionExtensions.Tests
 {
     public class TypeExtensionsTests
     {
+        public class GenericType<T, K>
+            where T : new()
+            where K : IParameter
+        {
+
+        }
+
         public int IntValue
         {
             set

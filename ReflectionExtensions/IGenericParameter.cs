@@ -12,47 +12,41 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
     /// <summary>
-    /// Defines an abstraction for members of a type.
+    /// Defines an interface for a generic parameter.
     /// </summary>
-    public interface IMember : IEquatable<IMember>
+    public interface IGenericParameter : IMember, IEquatable<IGenericParameter>
     {
+
         /// <summary>
-        /// Gets the name of the member.
+        /// Gets the (zero-based) index that the parameter appears at.
         /// </summary>
-        string Name
+        int Position
         {
             get;
         }
 
         /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
+        /// Gets the list of constraints that are put on this parameter.
         /// </summary>
-        Type ReturnType
+        IEnumerable<IGenericConstraint> Constraints
         {
             get;
         }
 
         /// <summary>
-        /// Gets the type that this member belongs to.
+        /// Determines if the given type matches all of the constraints on this parameter.
         /// </summary>
-        Type EnclosingType
-        {
-            get;
-        }
+        /// <param name="type">The type to test against the contstraints.</param>
+        /// <returns></returns>
+        bool MatchesConstraints(IType type);
     }
 }

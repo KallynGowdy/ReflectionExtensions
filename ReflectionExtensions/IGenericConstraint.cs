@@ -14,34 +14,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace ReflectionExtensions.Tests
+namespace ReflectionExtensions
 {
-    public class MethodExtensionsTests
+    /// <summary>
+    /// Defines a class that describes a generic parameter constraint.
+    /// </summary>
+    public interface IGenericConstraint : IEquatable<IGenericConstraint>
     {
-        public int Int
-        {
-            get;
-            set;
-        }
-
-        public void Test()
-        {
-            IType t = typeof(MethodExtensionsTests).Wrap();
-
-            IMethod m = t.GetMethod("SomeMethod");
-            Debug.Assert(m != null);
-            m.Invoke(this, null);
-        }
-
-        public void SomeMethod()
-        {
-            Int++;
-        }
+        /// <summary>
+        /// Determines if the given type matches this contstraint.
+        /// </summary>
+        /// <param name="type">The type to test against the constraint.</param>
+        /// <returns>Returns true if the type matches the constraint, otherwise false.</returns>
+        bool MatchesConstraint(IType type);
     }
 }

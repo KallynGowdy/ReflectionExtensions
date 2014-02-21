@@ -50,9 +50,25 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
+        /// Gets whether this method accepts type arguments.
+        /// </summary>
+        bool IsGeneric
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the list of parameters that this method takes as arguments.
         /// </summary>
         IEnumerable<IParameter> Parameters
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the list of generic parameters that this method takes as arguments.
+        /// </summary>
+        IEnumerable<IGenericParameter> GenericParameters
         {
             get;
         }
@@ -63,10 +79,20 @@ namespace ReflectionExtensions
         /// <typeparam name="T">The type to cast the returned value into.</typeparam>
         /// <param name="reference">A reference to the object whose type contains this method.</param>
         /// <param name="arguments">An object whose members define the values to pass to the method.</param>
+        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <returns>Returns the value returned from the method cast into the given type. Returns the default value if the return type is void or null.</returns>
+        T Invoke<T>(object reference, object arguments);
+
+        /// <summary>
+        /// Invokes this method using the given object's members as arguments.
+        /// </summary>
+        /// <typeparam name="T">The type to cast the returned value into.</typeparam>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
+        /// <param name="arguments">An object whose members define the values to pass to the method.</param>
         /// <param name="defaultValue">The value to return if the return type of this method is void.</param>
         /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
-        /// <returns>Returns the value returned from the method cast into the given type. Returns the default value if the return type is void.</returns>
-        T Invoke<T>(object reference, object arguments, T defaultValue = default(T));
+        /// <returns>Returns the value returned from the method cast into the given type. Returns the default value if the return type is void or null.</returns>
+        T Invoke<T>(object reference, object arguments, T defaultValue);
 
         /// <summary>
         /// Invokes this method using the given objects as arguments.
@@ -75,16 +101,28 @@ namespace ReflectionExtensions
         /// <param name="reference">A reference to the object whose type contains this method.</param>
         /// <param name="arguments">A list of arguments whose order and type matches the methods signature.</param>
         /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
-        /// <returns>Returns the value returned from the method cast into the given type. Returns default(<typeparamref name="TReturn"/>) value if the return type is void.</returns>
+        /// <returns>Returns the value returned from the method cast into the given type. Returns default(<typeparamref name="TReturn"/>) value if the return type is void or null.</returns>
         TReturn Invoke<TReturn>(object reference, params object[] arguments);
 
+        /// <summary>
+        /// Invokes this method using the given objects as arguments.
+        /// </summary>
+        /// <typeparam name="TReturn">The type to cast the returned value into.</typeparam>
+        /// <param name="genericArguments">A list of types that should be provided to the method as generic arguments.</param>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
+        /// <param name="arguments">A list of arguments whose order and type matches the methods signature.</param>
+        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <returns>Returns the value returned from the method cast into the given type. Returns default(<typeparamref name="TReturn"/>) value if the return type is void or null.</returns>
+        TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments);
+
+        
         /// <summary>
         /// Invokes this method using the given object's members as arguments.
         /// </summary>
         /// <param name="reference">A reference to the object that contains this method.</param>
         /// <param name="arguments">An object whose members define the values to pass to the method.</param>
         /// <param name="defaultValue">The value to return if the return type of this method is void.</param>
-        /// <returns>Returns the value returned from the method. Returns null if the return type is void.</returns>
+        /// <returns>Returns the value returned from the method. Returns null if the return type is void or null.</returns>
         object Invoke(object reference, object arguments);
     }
 }

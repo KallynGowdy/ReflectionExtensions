@@ -26,7 +26,6 @@ namespace ReflectionExtensions
     /// </summary>
     public class MethodWrapper : IMethod
     {
-
         /// <summary>
         /// Creates a new wrapper around the given method.
         /// </summary>
@@ -117,7 +116,7 @@ namespace ReflectionExtensions
         }
 
 
-        public T Invoke<T>(object reference, object arguments, T defaultValue = default(T))
+        public T Invoke<T>(object reference, object arguments, T defaultValue)
         {
             try
             {
@@ -127,6 +126,11 @@ namespace ReflectionExtensions
             {
                 throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(T)), "T", e);
             }
+        }
+
+        public T Invoke<T>(object reference, object arguments)
+        {
+            return Invoke<T>(reference, arguments, default(T));
         }
 
         public TReturn Invoke<TReturn>(object reference, params object[] arguments)
@@ -206,6 +210,23 @@ namespace ReflectionExtensions
                 this.ReturnType.Equals(other.ReturnType) &&
                 this.EnclosingType.Equals(other.EnclosingType) &&
                 this.Parameters.SequenceEqual(other.Parameters);
+        }
+
+
+        public bool IsGeneric
+        {
+            get { return WrappedMethod.IsGenericMethod; }
+        }
+
+        public IEnumerable<IGenericParameter> GenericParameters
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+
+        public TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments)
+        {
+            throw new NotImplementedException();
         }
     }
 }
