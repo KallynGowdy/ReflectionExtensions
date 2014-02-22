@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,12 +29,14 @@ namespace ReflectionExtensions
         /// </summary>
         /// <param name="obj">The object to check for validity.</param>
         /// <param name="paramName">The name of the parameter that is being checked.</param>
+        [ContractArgumentValidator]
         internal static void ThrowIfNull(this object obj, string paramName)
         {
             if (obj == null)
             {
                 throw new ArgumentNullException(paramName);
             }
+            Contract.EndContractBlock();
         }
 
         /// <summary>
@@ -46,6 +50,10 @@ namespace ReflectionExtensions
         /// <returns>Returns an enumerable list of <typeparamref name="TFirst"/> objects that was filtered element-by-element using the given function.</returns>
         internal static IEnumerable<TFirst> WhereSequence<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> filter)
         {
+            Contract.Requires<ArgumentNullException>(first != null, "first");
+            Contract.Requires<ArgumentNullException>(second != null, "second");
+            Contract.Requires<ArgumentNullException>(filter != null, "filter");
+
             IEnumerator<TFirst> fEnumerator = first.GetEnumerator();
             IEnumerator<TSecond> sEnumerator = second.GetEnumerator();
 
@@ -70,6 +78,10 @@ namespace ReflectionExtensions
         /// <returns></returns>
         internal static bool SequenceEqual<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> comparer)
         {
+            Contract.Requires<ArgumentNullException>(first != null, "first");
+            Contract.Requires<ArgumentNullException>(second != null, "second");
+            Contract.Requires<ArgumentNullException>(comparer != null, "comparer");
+
             IEnumerator<TFirst> fEnumerator = first.GetEnumerator();
             IEnumerator<TSecond> sEnumerator = second.GetEnumerator();
             if (first.Count() == second.Count())
@@ -96,6 +108,7 @@ namespace ReflectionExtensions
         /// <returns></returns>
         internal static int HashCode(params object[] values)
         {
+            Contract.Requires<ArgumentNullException>(values != null, "values");
             unchecked
             {
                 int hash = 17;
@@ -106,6 +119,40 @@ namespace ReflectionExtensions
                 }
 
                 return hash;
+            }
+        }
+
+        /// <summary>
+        /// Gets the access modifier that describes the access that other classes have to the given member.
+        /// </summary>
+        /// <param name="member">The member to get the access modifiers for.</param>
+        /// <returns>Returns the access modifiers that the member has.</returns>
+        internal static AccessModifier GetAccessModifiers(this MethodBase member)
+        {
+            Contract.Requires<ArgumentNullException>(member != null, "member");
+            if (member.IsPublic)
+            {
+                return AccessModifier.Public;
+            }
+            else if (member.IsPrivate)
+            {
+                return AccessModifier.Private;
+            }
+            else if (member.IsFamily)
+            {
+                return AccessModifier.Protected;
+            }
+            else if (member.IsFamilyAndAssembly)
+            {
+                return AccessModifier.ProtectedAndInternal;
+            }
+            else if (member.IsAssembly)
+            {
+                return AccessModifier.Internal;
+            }
+            else
+            {
+                return AccessModifier.ProtectedOrInternal;
             }
         }
     }

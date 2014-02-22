@@ -51,7 +51,7 @@ namespace ReflectionExtensions.Tests
                 Console.WriteLine("{0}: {1}", storage.Name, storage.CanRead ? storage[this] : "Null");
             }
 
-            var equalsMethod = t.Methods.First(a => a.Name.Equals("Equals"));
+            var equalsMethod = t.Methods.First(a => a.Name.Equals("Equals")) as INonGenericMethod;
 
             //this.Equals(obj: this);
             Console.WriteLine("Equals(obj: this): {0}", equalsMethod.Invoke<bool>(this, new { obj = this }));
@@ -71,10 +71,18 @@ namespace ReflectionExtensions.Tests
 
             Console.WriteLine("Hash Code Equality: {0}, {1}, Equal: {2}", tHash, otherHash, tHash == otherHash);
 
-            //Reference Equality
-            Debug.Assert(other != t);
+            bool equalsOperatorTest = other == t;
 
-            Console.WriteLine("t and other refer to {0} instances", other != t ? "different" : "the same");
+            Debug.Assert(!equalsOperatorTest);
+
+            Console.WriteLine("t and other compare as {0} values", equalsOperatorTest ? "the same" : "different");
+
+            bool diffReferences = !Object.ReferenceEquals(other, t);
+
+            //Reference Equality
+            Debug.Assert(diffReferences);
+
+            Console.WriteLine("t and other refer to {0} instances", diffReferences ? "different" : "the same");
         }
 
     }

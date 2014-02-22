@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -24,7 +25,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines a class that contains a set of extension helper methods for use in reflection.
     /// </summary>
-    public static class ReflectionExtensions
+    public static class Extensions
     {
         /// <summary>
         /// Wraps the given type in a new ReflectionExtensions.IType object that provides useful functionality.
@@ -33,7 +34,14 @@ namespace ReflectionExtensions
         /// <returns>Returns a new ReflectionExtensions.IType object.</returns>
         public static IType Wrap(this Type type)
         {
-            return new TypeWrapper(type);
+            if (type == null)
+            {
+                return null;
+            }
+            else
+            {
+                return new TypeWrapper(type);
+            }
         }
 
         /// <summary>
@@ -53,7 +61,15 @@ namespace ReflectionExtensions
         /// <returns>Returns a new ReflectionExtensions.IMethod object.</returns>
         public static IMethod Wrap(this MethodBase method)
         {
-            return new MethodWrapper(method);
+            Contract.Requires(method != null, "method");
+            if (method.IsGenericMethod && method is MethodInfo)
+            {
+                return new GenericMethodWrapper((MethodInfo)method);
+            }
+            else
+            {
+                return new NonGenericMethodWrapper(method);
+            }
         }
 
         /// <summary>
@@ -85,15 +101,15 @@ namespace ReflectionExtensions
         {
             if (member is FieldInfo)
             {
-                return new FieldWrapper((FieldInfo) member);
+                return ((FieldInfo)member).Wrap();
             }
             else if (member is PropertyInfo)
             {
-                return new PropertyWrapper((PropertyInfo)member);
+                return ((PropertyInfo)member).Wrap();
             }
             else if (member is MethodBase)
             {
-                return new MethodWrapper((MethodBase)member);
+                return ((MethodBase)member).Wrap();
             }
             return null;
         }
@@ -109,14 +125,8 @@ namespace ReflectionExtensions
         /// found.</returns>
         public static IMethod GetMethod<T1>(this IType type, string name)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException("type");
-            }
-            else if (name == null)
-            {
-                throw new ArgumentNullException("name");
-            }
+            Contract.Requires<ArgumentNullException>(type != null, "type");
+            Contract.Requires<ArgumentNullException>(name != null, "name");
 
             return GetMethod(type, name, new[] { typeof(T1) });
         }
@@ -132,40 +142,40 @@ namespace ReflectionExtensions
         /// <returns>Returns a ReflectionExtensions.IMethod object that represents the retrieved method. Returns null if the method could not be found.</returns>
         public static IMethod GetMethod<T1, T2>(this IType type, string name)
         {
-            type.ThrowIfNull("type");
-            name.ThrowIfNull("name");
+            Contract.Requires<ArgumentNullException>(type != null, "The given type must not be null");
+            Contract.Requires<ArgumentNullException>(name != null, "The given name must not be null");
 
             return GetMethod(type, name, new[] { typeof(T1), typeof(T2) });
         }
 
+        /// <summary>
+        /// Gets a list of methods whose names equal the given name.
+        /// </summary>
+        /// <param name="name">The case-sensitive name of the methods to retrive.</param>
+        /// <param name="methods">The list of methods to filter by name.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if the given list is null or if the given name is null.</exception>
+        /// <returns>Returns all of the methods from the current list whose name equals the given name.</returns>
+        public static IEnumerable<IMethod> WithName(this IEnumerable<IMethod> methods, string name)
+        {
+            Contract.Requires(methods != null);
+            Contract.Requires(name != null);
+
+            var enumerator = methods.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                if (enumerator.Current != null && enumerator.Current.Name.Equals(name))
+                {
+                    yield return enumerator.Current;
+                }
+            }
+        }
+
         private static IMethod GetMethod(IType type, string name, Type[] parameterTypes)
         {
-            return type.GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)));
+            Contract.Requires<ArgumentNullException>(type != null, "type");
+            Contract.Requires<ArgumentNullException>(name != null, "name");
 
-            //foreach (var method in type.GetMethods(name))
-            //{
-                
-                
-            //    var parameters = method.Parameters.ToArray();
-
-            //    if (parameters.Length == parameterTypes.Length)
-            //    {
-            //        bool good = true;
-            //        for (int i = 0; i < parameters.Length; i++)
-            //        {
-            //            if (!parameters[i].ReturnType.IsAssignableFrom(parameterTypes[i]))
-            //            {
-            //                good = false;
-            //                break;
-            //            }
-            //        }
-            //        if (good)
-            //        {
-            //            return method;
-            //        }
-            //    }
-            //}
-            //return null;
+            return type.Methods.Where(m => m.Name.Equals(name)).SingleOrDefault(m => m.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)));
         }
     }
 }

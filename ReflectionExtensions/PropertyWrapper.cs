@@ -123,6 +123,7 @@ namespace ReflectionExtensions
         }
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
         public T GetValue<T>(object reference)
         {
             try

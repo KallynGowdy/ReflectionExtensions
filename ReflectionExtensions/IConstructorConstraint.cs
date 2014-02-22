@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface that defines a generic constraint that requires that a type has a certian constructor.
     /// </summary>
+    [ContractClass(typeof(IConstructorConstraintContract))]
     public interface IConstructorConstraint : IGenericConstraint, IEquatable<IConstructorConstraint>
     {
         /// <summary>
@@ -33,6 +35,34 @@ namespace ReflectionExtensions
         {
             get;
         }
+    }
 
+    [ContractClassFor(typeof(IConstructorConstraint))]
+    internal abstract class IConstructorConstraintContract : IConstructorConstraint
+    {
+
+        IEnumerable<IParameter> IConstructorConstraint.RequiredParameters
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IParameter>>() != null);
+                return default(IEnumerable<IParameter>);
+            }
+        }
+
+        bool IGenericConstraint.MatchesConstraint(IType type)
+        {
+            return default(bool);
+        }
+
+        bool IEquatable<IGenericConstraint>.Equals(IGenericConstraint other)
+        {
+            return default(bool);
+        }
+
+        bool IEquatable<IConstructorConstraint>.Equals(IConstructorConstraint other)
+        {
+            return default(bool);
+        }
     }
 }

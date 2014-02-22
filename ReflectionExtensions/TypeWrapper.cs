@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -42,10 +43,7 @@ namespace ReflectionExtensions
         /// <param name="representedType">The type to augment.</param>
         public TypeWrapper(Type representedType)
         {
-            if (representedType == null)
-            {
-                throw new ArgumentNullException("representedType");
-            }
+            Contract.Requires(representedType != null);
             this.RepresentedType = representedType;
         }
 
@@ -124,9 +122,8 @@ namespace ReflectionExtensions
 
         public TReturn Invoke<TReturn>(string name, object reference, params object[] arguments)
         {
-            name.ThrowIfNull("name");
-            reference.ThrowIfNull("reference");
-            IMethod method = GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
+
+            INonGenericMethod method = GetMethods(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
             if (method == null)
             {
                 throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
@@ -145,7 +142,7 @@ namespace ReflectionExtensions
         /// <param name="name">The case-sensitive name of the method to invoke.</param>
         /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
         /// <param name="arguments">A list of objects to use as arguments for the invocation.</param>
-        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
         /// <exception cref="System.MissingMethodException">
         /// Thrown if the method to invoke does not exist. That is, if there is no method with the given name or no method
         /// matches the given arguments.
@@ -155,10 +152,9 @@ namespace ReflectionExtensions
         /// <returns>Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns null or void.</returns>
         public TReturn Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
         {
-            name.ThrowIfNull("name");
-            reference.ThrowIfNull("reference");
 
-            IMethod method = GetMethods(name).SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
+
+            INonGenericMethod method = GetMethods(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
             if (method == null)
             {
                 throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
@@ -201,7 +197,6 @@ namespace ReflectionExtensions
                 this.Assembly.Equals(other.Assembly);
         }
 
-
         public IMethod GetMethod(string name)
         {
             return Methods.SingleOrDefault(m => m.Name.Equals(name));
@@ -220,37 +215,44 @@ namespace ReflectionExtensions
 
         public IType BaseType
         {
-            get { return RepresentedType.BaseType.Wrap(); }
+            get
+            {
+                return RepresentedType.BaseType.Wrap();
+            }
         }
 
         /// <summary>
         /// Determines if this type inherits from the given base type.
         /// </summary>
-        /// <param name="base">The type to check inheritance from.</param>
+        /// <param name="baseType">The type to check inheritance from.</param>
         /// <returns>Returns true if this type inherits from the given base type, otherwise false.</returns>
-        public bool InheritsFrom(IType @base)
+        public bool InheritsFrom(IType baseType)
         {
-            @base.ThrowIfNull("base");
-
             IType objectType = typeof(object).Wrap();
 
             //Every object inherits from System.Object
-            if (@base.Equals(objectType))
+            if (baseType.Equals(objectType))
             {
                 return true;
             }
 
-            IType baseType = this.BaseType;
+            IType inheritedType = this.BaseType;
 
             //Otherwise, go through the inheritance chain and check for the type.
-            while (baseType != null && !baseType.Equals(objectType))
+            while (inheritedType != null && !inheritedType.Equals(objectType))
             {
-                if (baseType.Equals(@base))
+                if (inheritedType.Equals(inheritedType))
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+
+        public bool IsInterface
+        {
+            get { return RepresentedType.IsInterface; }
         }
     }
 }

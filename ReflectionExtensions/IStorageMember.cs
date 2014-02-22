@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for a member of a type that stores a value. Defines operations and propterties for fields and properties of a type.
     /// </summary>
+    [ContractClass(typeof(IStorageMemberContract))]
     public interface IStorageMember : IMember
     {
         /// <summary>
@@ -71,7 +73,7 @@ namespace ReflectionExtensions
         /// <returns>Returns the value stored by the given object in this field.</returns>
         /// <exception cref="System.InvalidOperationException">Thrown if this property/field cannot read the value.</exception>
         /// <exception cref="System.ArgumentException">Thrown if <paramref name="reference"/>'s type does not equal this property/field's enclosing type.</exception>
-        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
         T GetValue<T>(object reference);
 
         /// <summary>
@@ -82,5 +84,82 @@ namespace ReflectionExtensions
         /// <exception cref="System.InvalidOperationException">Thrown if this property/field cannot write when trying to write.</exception>
         /// <exception cref="System.ArgumentException">Thrown if <paramref name="reference"/>'s type does not equal this property/field's enclosing type.</exception>
         void SetValue(object reference, object value);
+    }
+
+    [ContractClassFor(typeof(IStorageMember))]
+    internal abstract class IStorageMemberContract : IStorageMember
+    {
+
+        bool IStorageMember.CanRead
+        {
+            get { return default(bool); }
+        }
+
+        bool IStorageMember.CanWrite
+        {
+            get { return default(bool); }
+        }
+
+        object IStorageMember.this[object reference]
+        {
+            get
+            {
+                Contract.Requires(reference != null);
+                Contract.Requires(((IStorageMember)this).CanRead);
+                Contract.Requires(((IMember)this).EnclosingType.IsAssignableFrom(reference.GetType()));
+                return default(object);
+            }
+            set
+            {
+                Contract.Requires(value != null);
+                Contract.Requires(reference != null);
+                Contract.Requires(((IStorageMember)this).CanWrite);
+                Contract.Requires(((IMember)this).EnclosingType.IsAssignableFrom(reference.GetType()));
+            }
+        }
+
+        object IStorageMember.GetValue(object reference)
+        {
+            Contract.Requires(reference != null);
+            Contract.Requires(((IStorageMember)this).CanRead);
+            Contract.Requires(((IMember)this).EnclosingType.IsAssignableFrom(reference.GetType()));
+            return default(object);
+        }
+
+        T IStorageMember.GetValue<T>(object reference)
+        {
+            Contract.Requires(reference != null);
+            Contract.Requires(((IStorageMember)this).CanRead);
+            Contract.Requires(((IMember)this).EnclosingType.IsAssignableFrom(reference.GetType()));
+            return default(T);
+        }
+
+        void IStorageMember.SetValue(object reference, object value)
+        {
+            Contract.Requires(value != null);
+            Contract.Requires(reference != null);
+            Contract.Requires(((IStorageMember)this).CanWrite);
+            Contract.Requires(((IMember)this).EnclosingType.IsAssignableFrom(reference.GetType()));
+        }
+
+        string IMember.Name
+        {
+            get { return default(string); }
+        }
+
+        Type IMember.ReturnType
+        {
+            get { return default(Type); }
+        }
+
+        Type IMember.EnclosingType
+        {
+            get { return default(Type); }
+        }
+
+        bool IEquatable<IMember>.Equals(IMember other)
+        {
+            return default(bool);
+        }
     }
 }

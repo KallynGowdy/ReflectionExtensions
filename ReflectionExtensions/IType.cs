@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -25,6 +26,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for an object that describes a type.
     /// </summary>
+    [ContractClass(typeof(ITypeContract))]
     public interface IType : IEquatable<IType>
     {
         /// <summary>
@@ -139,29 +141,13 @@ namespace ReflectionExtensions
         bool InheritsFrom(IType baseType);
 
         /// <summary>
-        /// Gets the single method that has the given name.
-        /// </summary>
-        /// <param name="name">The name of the method to retrieve.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown if the given name is null.</exception>
-        /// <exception cref="System.InvalidOperationException">Thrown if there is more than one method with the given name.</exception>
-        /// <returns>Returns the method or null if it doesn't exist.</returns>
-        IMethod GetMethod(string name);
-
-        /// <summary>
-        /// Gets a list of public non-static methods based on their names.
-        /// </summary>
-        /// <param name="name">The case sensitive name of the methods to retrieve.</param>
-        /// <returns></returns>
-        IEnumerable<IMethod> GetMethods(string name);
-
-        /// <summary>
         /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
         /// </summary>
         /// <typeparam name="TReturn">The type that the returned value should be cast into.</typeparam>
         /// <param name="name">The case-sensitive name of the method to invoke.</param>
         /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
         /// <param name="arguments">A list of objects to use as arguments for the invocation.</param>
-        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
         /// <exception cref="System.MissingMethodException">
         /// Thrown if the method to invoke does not exist. That is, if there is no method with the given name or no method
         /// matches the given arguments.
@@ -170,7 +156,7 @@ namespace ReflectionExtensions
         /// <exception cref="System.ArgumentNullException">Thrown if the given name or reference is null.</exception>
         /// <returns>Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns null or void.</returns>
         TReturn Invoke<TReturn>(string name, object reference, params object[] arguments);
-        
+
         /// <summary>
         /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
         /// </summary>
@@ -183,7 +169,7 @@ namespace ReflectionExtensions
         /// Thrown if the method to call does not exist. That is, if there is no method with the given name or there no method matches
         /// the given arguments.
         /// </exception>
-        /// <exception cref="ReflectionExtensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
         /// <exception cref="System.ArgumentNullException">
         /// Thrown if the given name or reference is null.
         /// </exception>
@@ -207,6 +193,170 @@ namespace ReflectionExtensions
         IEnumerable<IMethod> Constructors
         {
             get;
+        }
+
+        /// <summary>
+        /// Gets whether the type defines an interface.
+        /// </summary>
+        bool IsInterface
+        {
+            get;
+        }
+    }
+
+    [ContractClassFor(typeof(IType))]
+    internal abstract class ITypeContract : IType
+    {
+        string IType.Name
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<string>() != null);
+                return default(string);
+            }
+        }
+
+        string IType.FullName
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<string>() != null);
+                return default(string);
+            }
+        }
+
+        Assembly IType.Assembly
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<Assembly>() != null);
+                return default(Assembly);
+            }
+        }
+
+        bool IType.IsGenericType
+        {
+            get { return default(bool); }
+        }
+
+        bool IType.IsClass
+        {
+            get { return default(bool); }
+        }
+
+        bool IType.IsStruct
+        {
+            get { return default(bool); }
+        }
+
+        bool IType.IsAbstract
+        {
+            get { return default(bool); }
+        }
+
+        IType IType.BaseType
+        {
+            get
+            {
+                return default(IType);
+            }
+        }
+
+        IEnumerable<IGenericParameter> IType.GenericArguments
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IGenericParameter>>() != null);
+                return default(IEnumerable<IGenericParameter>);
+            }
+        }
+
+        IEnumerable<IMember> IType.Members
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IMember>>() != null);
+                return default(IEnumerable<IMember>);
+            }
+        }
+
+        IEnumerable<IField> IType.Fields
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IField>>() != null);
+                return default(IEnumerable<IField>);
+            }
+        }
+
+        IEnumerable<IProperty> IType.Properties
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IProperty>>() != null);
+                return default(IEnumerable<IProperty>);
+            }
+        }
+
+        IEnumerable<IMethod> IType.Methods
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IMethod>>() != null);
+                return default(IEnumerable<IMethod>);
+            }
+        }
+
+        bool IType.InheritsFrom(IType baseType)
+        {
+            Contract.Requires<ArgumentNullException>(baseType != null, "baseType");
+            return default(bool);
+        }
+
+        TReturn IType.Invoke<TReturn>(string name, object reference, params object[] arguments)
+        {
+            Contract.Requires<ArgumentNullException>(name != null, "name");
+            Contract.Requires<ArgumentNullException>(reference != null, "reference");
+            return default(TReturn);
+        }
+
+        TReturn IType.Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
+        {
+            Contract.Requires<ArgumentNullException>(name != null, "name");
+            Contract.Requires<ArgumentNullException>(reference != null, "reference");
+            return default(TReturn);
+        }
+
+        IEnumerable<IStorageMember> IType.StorageMembers
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IStorageMember>>() != null);
+                return default(IEnumerable<IStorageMember>);
+            }
+        }
+
+        IEnumerable<IMethod> IType.Constructors
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IMethod>>() != null);
+                return default(IEnumerable<IMethod>);
+            }
+        }
+
+        bool IEquatable<IType>.Equals(IType other)
+        {
+            return default(bool);
+        }
+
+
+        bool IType.IsInterface
+        {
+            get
+            {
+                return default(bool);
+            }
         }
     }
 }

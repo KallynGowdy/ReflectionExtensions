@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,33 +13,44 @@ namespace ReflectionExtensions
     /// </summary>
     public class GenericParameter : IGenericParameter
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public GenericParameter(Type type)
         {
-            type.ThrowIfNull("type");
-            if (!type.IsGenericParameter)
-            {
-                throw new ArgumentException("The given type must be a generic parameter");
-            }
-            else
-            {
-                Position = type.GenericParameterPosition;
-                Name = type.Name;
-                EnclosingType = type.DeclaringType;
-                BuildConstraints(type);
-            }
+            Contract.Requires<ArgumentNullException>(type != null, "The given type must not be null");
+            Contract.Requires<ArgumentException>(type.IsGenericParameter, "The given type must be a generic parameter.");
+
+            Position = type.GenericParameterPosition;
+            Name = type.Name;
+            EnclosingType = type.DeclaringType;
+            BuildConstraints(type);
         }
 
         private void BuildConstraints(Type type)
         {
+            Contract.Requires<ArgumentNullException>(type != null, "type");
             List<IGenericConstraint> constraints = new List<IGenericConstraint>();
-            if (type.BaseType.Equals(typeof(object)))
-            {
-                constraints.Add(new ConstructorConstraint());
-            }
-            else if (type.BaseType != null)
+
+
+            if (type.BaseType != null && !type.BaseType.Equals(typeof(object)))
             {
                 constraints.Add(new InheritanceConstraint(type.BaseType));
             }
+            else if (type.GenericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
+            {
+                //Allow any type that does not inherit from System.ValueType.
+                constraints.Add(new InheritanceConstraint(typeof(ValueType), true));
+            }
+            else if (type.GenericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
+            {
+                //Allow any type that inherits from System.ValueType.
+                constraints.Add(new InheritanceConstraint(typeof(ValueType)));
+            }
+
+            if (type.GenericParameterAttributes.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint))
+            {
+                constraints.Add(new ConstructorConstraint());
+            }
+
             foreach (Type @interface in type.GetInterfaces())
             {
                 constraints.Add(new InheritanceConstraint(@interface));

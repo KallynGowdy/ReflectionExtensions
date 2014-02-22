@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an abstraction for members of a type.
     /// </summary>
+    [ContractClass(typeof(IMemberContract))]
     public interface IMember : IEquatable<IMember>
     {
         /// <summary>
@@ -55,4 +57,40 @@ namespace ReflectionExtensions
             get;
         }
     }
+
+    [ContractClassFor(typeof(IMember))]
+    internal abstract class IMemberContract : IMember
+    {
+        string IMember.Name
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<string>() != null);
+                return default(string);
+            }
+        }
+
+        Type IMember.ReturnType
+        {
+            get
+            {
+                return default(Type);
+            }
+        }
+
+        Type IMember.EnclosingType
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<Type>() != null);
+                return default(Type);
+            }
+        }
+
+        bool IEquatable<IMember>.Equals(IMember other)
+        {
+            return default(bool);
+        }
+    }
+
 }

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,20 +27,37 @@ namespace ReflectionExtensions
     [Serializable]
     public class TypeArgumentException : ArgumentException
     {
-        /// <summary>
-        /// Creates a new ReflectionExtensions.TypeArgumentException.
-        /// </summary>
-        /// <param name="errorMessage">An error message describing the problem.</param>
-        /// <param name="paramName">A string that contains the name of the type argument that was at fault.</param>
-        public TypeArgumentException(string errorMessage, string paramName) : base(errorMessage, paramName) { }
+        protected TypeArgumentException(SerializationInfo serializationInfo, StreamingContext context) : base(serializationInfo, context) { }
 
         /// <summary>
         /// Creates a new ReflectionExtensions.TypeArgumentException.
         /// </summary>
         /// <param name="errorMessage">An error message describing the problem.</param>
-        /// <param name="paramName">A string that contains the name of the type argument that was at fault.</param>
+        /// <param name="parameterName">A string that contains the name of the type argument that was at fault.</param>
+        public TypeArgumentException(string errorMessage, string parameterName) : base(errorMessage, parameterName) { }
+
+        /// <summary>
+        /// Creates a new ReflectionExtensions.TypeArgumentException.
+        /// </summary>
+        /// <param name="errorMessage">An error message describing the problem.</param>
+        /// <param name="parameterName">A string that contains the name of the type argument that was at fault.</param>
         /// <param name="innerException">The exception that caused this exception to occur.</param>
-        public TypeArgumentException(string errorMessage, string paramName, Exception innerException) : base(errorMessage, paramName, innerException) { }
+        public TypeArgumentException(string errorMessage, string parameterName, Exception innerException) : base(errorMessage, parameterName, innerException) { }
+
+        /// <summary>
+        /// Creates a new ReflectionExtensions.TypeArgumentException.
+        /// </summary>
+        /// <param name="errorMessage">An error message describing the problem.</param>
+        /// <param name="innerException">The exception that caused this exception to occur.</param>
+        public TypeArgumentException(string errorMessage, Exception innerException) : base(errorMessage, innerException) { }
+
+        /// <summary>
+        /// Creates a new ReflectionExtensions.TypeArgumentException.
+        /// </summary>
+        public TypeArgumentException() : base("The generic given type argument was invalid.")
+        {
+
+        }
 
     }
 }

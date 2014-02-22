@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -22,16 +23,24 @@ using System.Text;
 namespace ReflectionExtensions
 {
     /// <summary>
-    /// Defines a wrapper class around a MethodInfo object.
+    /// Defines a wrapper class around a MethodBase object.
     /// </summary>
-    public class MethodWrapper : IMethod
+    /// <remarks>
+    /// Note that while this method wrapper is normally used for non-generic methods, not all MethodBase objects need to be non-generic.
+    /// This class just doesn't provide support for generic methods. Besides, some MethodBase objects can be generic but not accept generic arguments,
+    /// such as a constructor.
+    /// </remarks>
+    public class NonGenericMethodWrapper : INonGenericMethod
     {
         /// <summary>
         /// Creates a new wrapper around the given method.
         /// </summary>
-        /// <param name="method">The method to augment.</param>
-        public MethodWrapper(MethodBase method)
+        /// <exception cref="System.ArgumentNullException">Thrown if the given method is null.</exception>
+        /// <param name="method">The method to augment. Must be non generic.</param>
+        public NonGenericMethodWrapper(MethodBase method)
         {
+            Contract.Requires<ArgumentNullException>(method != null, "method");
+
             this.WrappedMethod = method;
         }
 
@@ -63,26 +72,7 @@ namespace ReflectionExtensions
         {
             get
             {
-                if (WrappedMethod.IsPublic)
-                {
-                    return AccessModifier.Public;
-                }
-                else if (WrappedMethod.IsPrivate)
-                {
-                    return AccessModifier.Private;
-                }
-                else if (WrappedMethod.IsFamily)
-                {
-                    return AccessModifier.Protected;
-                }
-                else if (WrappedMethod.IsFamilyAndAssembly)
-                {
-                    return AccessModifier.ProtectedAndInternal;
-                }
-                else
-                {
-                    return AccessModifier.ProtectedOrInternal;
-                }
+                return WrappedMethod.GetAccessModifiers();
             }
         }
 
@@ -101,7 +91,7 @@ namespace ReflectionExtensions
                 }
                 else if (WrappedMethod is ConstructorInfo)
                 {
-                    return WrappedMethod.ReflectedType;
+                    return WrappedMethod.DeclaringType;
                 }
                 else
                 {
@@ -112,15 +102,18 @@ namespace ReflectionExtensions
 
         public Type EnclosingType
         {
-            get { return WrappedMethod.ReflectedType; }
+            get { return WrappedMethod.DeclaringType; }
         }
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
         public T Invoke<T>(object reference, object arguments, T defaultValue)
         {
             try
             {
-                return (T)(Invoke(reference, arguments) ?? defaultValue);
+                T value = (T)Invoke(reference, arguments);
+                return value != null ? value : defaultValue;
+
             }
             catch (InvalidCastException e)
             {
@@ -133,11 +126,13 @@ namespace ReflectionExtensions
             return Invoke<T>(reference, arguments, default(T));
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
         public TReturn Invoke<TReturn>(object reference, params object[] arguments)
         {
             try
             {
-                return (TReturn)(WrappedMethod.Invoke(reference, arguments) ?? default(TReturn));
+                TReturn value = (TReturn)WrappedMethod.Invoke(reference, arguments);
+                return value != null ? value : default(TReturn);
             }
             catch (InvalidCastException e)
             {
@@ -212,21 +207,16 @@ namespace ReflectionExtensions
                 this.Parameters.SequenceEqual(other.Parameters);
         }
 
-
-        public bool IsGeneric
+        public bool Equals(INonGenericMethod other)
         {
-            get { return WrappedMethod.IsGenericMethod; }
-        }
-
-        public IEnumerable<IGenericParameter> GenericParameters
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-
-        public TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments)
-        {
-            throw new NotImplementedException();
+            return other != null &&
+                this.Name.Equals(other.Name) &&
+                this.IsAbstract == other.IsAbstract &&
+                this.IsFinal == other.IsFinal &&
+                this.IsVirtual == other.IsVirtual &&
+                this.Access == other.Access &&
+                this.EnclosingType.Equals(other.EnclosingType) &&
+                this.Parameters.SequenceEqual(other.Parameters);
         }
     }
 }

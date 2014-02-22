@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,6 +24,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines an interface for a generic parameter.
     /// </summary>
+    [ContractClass(typeof(IGenericParameterContract))]
     public interface IGenericParameter : IMember, IEquatable<IGenericParameter>
     {
 
@@ -46,7 +48,67 @@ namespace ReflectionExtensions
         /// Determines if the given type matches all of the constraints on this parameter.
         /// </summary>
         /// <param name="type">The type to test against the contstraints.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if the given type is null.</exception>
         /// <returns></returns>
         bool MatchesConstraints(IType type);
+    }
+
+    [ContractClassFor(typeof(IGenericParameter))]
+    internal abstract class IGenericParameterContract : IGenericParameter
+    {
+
+        int IGenericParameter.Position
+        {
+            get { return default(int); }
+        }
+
+        IEnumerable<IGenericConstraint> IGenericParameter.Constraints
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnumerable<IGenericConstraint>>() != null);
+                return default(IEnumerable<IGenericConstraint>);
+            }
+        }
+
+        bool IGenericParameter.MatchesConstraints(IType type)
+        {
+            Contract.Requires(type != null, "The given type must not be null");
+            return default(bool);
+        }
+
+        string IMember.Name
+        {
+            get
+            {
+                return default(string);
+            }
+        }
+
+        Type IMember.ReturnType
+        {
+            get
+            {
+                return default(Type);
+            }
+        }
+
+        Type IMember.EnclosingType
+        {
+            get
+            {
+                return default(Type);
+            }
+        }
+
+        bool IEquatable<IMember>.Equals(IMember other)
+        {
+            return default(bool);
+        }
+
+        bool IEquatable<IGenericParameter>.Equals(IGenericParameter other)
+        {
+            return default(bool);
+        }
     }
 }

@@ -30,13 +30,74 @@ namespace ReflectionExtensions.Tests
             set;
         }
 
-        public void Test()
+        public void TestWrappers()
         {
             IType t = typeof(MethodExtensionsTests).Wrap();
 
-            IMethod m = t.GetMethod("SomeMethod");
+            INonGenericMethod m = t.Methods.Single(a => a.Name.Equals("SomeMethod")) as INonGenericMethod;
             Debug.Assert(m != null);
             m.Invoke(this, null);
+
+            IGenericMethod gm = t.Methods.WithName("SomeOtherMethod").Single() as IGenericMethod;
+            Debug.Assert(gm != null);
+
+            var result = gm.Invoke<object>(this, new[] { typeof(Console) }, null);
+
+            Debug.Assert(result == null);
+        }
+
+        public void TestCorrectGenericConstraints()
+        {
+            IType t = typeof(MethodExtensionsTests).Wrap();
+
+            Debug.Assert(t != null);
+
+            IGenericMethod method = t.Methods.WithName("ConstraintTestMethod").SingleOrDefault() as IGenericMethod;
+            Debug.Assert(method != null);
+
+            Tuple<string, int, double> value = method.Invoke<Tuple<string, int, double>>(this, new[] { typeof(string), typeof(int), typeof(double) }, new object[] { "Hello!", 15 });
+            Debug.Assert(value.Item1.Equals("Hello!"));
+            Debug.Assert(value.Item2.Equals(15));
+            Debug.Assert(value.Item3.Equals(0d));
+            Console.WriteLine(value);            
+        }
+
+        public void TestIncorectGenericConstraints()
+        {
+            IType t = typeof(MethodExtensionsTests).Wrap();
+
+            Debug.Assert(t != null);
+
+            IGenericMethod method = t.Methods.WithName("ConstraintTestMethod").SingleOrDefault() as IGenericMethod;
+            Debug.Assert(method != null);
+
+            try
+            {
+                //object is not a struct
+                Tuple<string, int, object> badValue = method.Invoke<Tuple<string, int, object>>(this, new[] { typeof(string), typeof(int), typeof(object) }, new object[] { "Hello!", 15 });
+                Debug.Assert(false);
+            }
+            catch (ArgumentNullException)
+            {
+                Debug.Assert(false);
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine("Good!");
+            }
+        }
+
+        public Tuple<T, K, S> ConstraintTestMethod<T, K, S>(T tValue, K kValue)
+            where T : class
+            where K : new()
+            where S : struct
+        {
+            return new Tuple<T, K, S>(tValue, kValue, new S());
+        }
+
+        public void SomeOtherMethod<T>()
+        {
+            Console.WriteLine("The type of the given type arg: {0}", typeof(T).Name);
         }
 
         public void SomeMethod()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
@@ -11,13 +12,37 @@ namespace ReflectionExtensions
     public class InheritanceConstraint : IInheritanceConstraint
     {
         /// <summary>
+        /// Inverts the result of the constraint calculation.
+        /// This acts like a NOT operator (!).
+        /// </summary>
+        public bool Invert
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Creates a new generic constraint that requires that a type argument inherit from the given type.
         /// </summary>
         /// <param name="type">The type to require inheritance from.</param>
         public InheritanceConstraint(Type type)
         {
-            type.ThrowIfNull("type");
+            Contract.Requires(type != null, "type");
             this.RequiredType = type.Wrap();
+        }
+
+        public InheritanceConstraint(Type type, bool invert)
+        {
+            Contract.Requires(type != null);
+            this.RequiredType = type.Wrap();
+            this.Invert = invert;
+        }
+
+        public InheritanceConstraint(IType type, bool invert)
+        {
+            Contract.Requires(type != null);
+            this.RequiredType = type;
+            this.Invert = invert;
         }
 
         /// <summary>
@@ -26,8 +51,7 @@ namespace ReflectionExtensions
         /// <param name="type">The type to require inheritance from.</param>
         public InheritanceConstraint(IType type)
         {
-            type.ThrowIfNull("type");
-
+            Contract.Requires(type != null, "type");
             this.RequiredType = type;
         }
 
@@ -39,8 +63,8 @@ namespace ReflectionExtensions
 
         public bool MatchesConstraint(IType type)
         {
-            type.ThrowIfNull("type");
-            return type.InheritsFrom(RequiredType);
+            bool result = type.InheritsFrom(RequiredType);
+            return Invert ? !result : result;
         }
 
         public bool Equals(IGenericConstraint other)

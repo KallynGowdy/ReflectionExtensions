@@ -21,10 +21,9 @@ namespace ReflectionExtensions
             private set;
         }
 
-        public bool MatchesConstraint(IType t)
+        public bool MatchesConstraint(IType type)
         {
-            t.ThrowIfNull("t");
-            return t.Constructors.SequenceEqual(RequiredParameters, (c, p) => c.Parameters.All(cp => p.Equals(cp)));
+            return type.IsStruct || type.Constructors.SequenceEqual(RequiredParameters, (c, p) => c.Parameters.All(cp => p.Equals(cp)));
         }
 
         public bool Equals(IGenericConstraint other)
