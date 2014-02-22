@@ -27,7 +27,10 @@ namespace ReflectionExtensions.Tests
             where T : new()
             where K : IParameter
         {
-
+            public void Hi(T t, K k)
+            {
+                Console.WriteLine("{{{0}, {1}}}", t, k);
+            }
         }
 
         public int IntValue
@@ -40,10 +43,26 @@ namespace ReflectionExtensions.Tests
 
         public float FloatField = 5;
 
+        public void TestGenerics()
+        {
+            IType t = typeof(GenericType<,>).Wrap();
+
+            Debug.Assert(t is IGenericType);
+
+            IGenericType genericType = (IGenericType)t;
+
+            INonGenericType generatedType = genericType.MakeGenericType(typeof(int), typeof(IParameter));
+
+            Debug.Assert(genericType != null);
+
+            generatedType.Invoke("Hi", new GenericType<int, IParameter>(), new object[] { 5, null });
+
+        }
+
         public void TestWrapper()
         {
-            IType t = typeof(TypeExtensionsTests).Wrap();
-            Debug.Assert(t.Members.Count() == 7);
+            INonGenericType t = typeof(TypeExtensionsTests).Wrap() as INonGenericType;
+            Debug.Assert(t.Members.Count() == 8);
             Debug.Assert(t.Methods.Where(a => a.Name.Equals("TestWrapper")).Count() == 1);
 
             foreach (var storage in t.StorageMembers)

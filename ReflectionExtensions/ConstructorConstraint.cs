@@ -21,6 +21,7 @@ namespace ReflectionExtensions
             private set;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public bool MatchesConstraint(IType type)
         {
             return type.IsStruct || type.Constructors.SequenceEqual(RequiredParameters, (c, p) => c.Parameters.All(cp => p.Equals(cp)));

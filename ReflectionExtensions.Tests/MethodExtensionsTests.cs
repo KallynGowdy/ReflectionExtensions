@@ -87,6 +87,54 @@ namespace ReflectionExtensions.Tests
             }
         }
 
+        public void TestMethodExtensions()
+        {
+            IType t = typeof(MethodExtensionsTests).Wrap();
+
+            Debug.Assert(t != null);
+
+            INonGenericMethod method = t.Methods.WithSignature("GetString", typeof(int), typeof(string)) as INonGenericMethod;
+
+            string result = method.Invoke<string>(this, new { age = 10, name = "My Name" });
+            Debug.Assert(result == "Name: My Name, Age: 10");
+        }
+
+        public void TestGenericInferredUsage()
+        {
+            IType thisType = typeof(MethodExtensionsTests).Wrap();
+
+            IGenericMethod gm = thisType.Methods.WithName("InferredMethod1").Single() as IGenericMethod;
+
+            Debug.Assert(gm != null);
+
+            gm.Invoke<object>(this, new object[] { 5 }, null);
+            gm.Invoke<object>(this, new object[] { "Hi!" }, null);
+
+            gm = thisType.Methods.WithName("InferredMethod2").Single() as IGenericMethod;
+
+            Tuple<float, string> result = gm.Invoke<Tuple<float, string>>(this, new object[] { 5.2f, "My Name is:" }, null);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Item1 == 5.2f);
+            Debug.Assert(result.Item2 == "My Name is:");
+
+            result = gm.Invoke<Tuple<float, string>>(this, new { key = 5.2f, value = "Value!" });
+            Debug.Assert(result != null);
+            Debug.Assert(result.Item1 == 5.2f);
+            Debug.Assert(result.Item2 == "Value!");
+
+            object objResult = gm.Invoke(this, new { key = 5.2f, value = "Value!" });
+            Debug.Assert(objResult != null);
+            Debug.Assert(objResult is Tuple<float, string>);
+            result = (Tuple<float, string>)objResult;
+            Debug.Assert(result.Item1 == 5.2f);
+            Debug.Assert(result.Item2 == "Value!");
+        }
+
+        public string GetString(int age, string name)
+        {
+            return string.Format("Name: {0}, Age: {1}", name, age);
+        }
+
         public Tuple<T, K, S> ConstraintTestMethod<T, K, S>(T tValue, K kValue)
             where T : class
             where K : new()
@@ -98,6 +146,18 @@ namespace ReflectionExtensions.Tests
         public void SomeOtherMethod<T>()
         {
             Console.WriteLine("The type of the given type arg: {0}", typeof(T).Name);
+        }
+
+        public void InferredMethod1<T>(T value)
+        {
+            Console.WriteLine("The given value is: {0}", value);
+        }
+
+        public Tuple<K, T> InferredMethod2<K, T>(K key, T value)
+            where K : new()
+            where T : class
+        {
+            return new Tuple<K, T>(key, value);
         }
 
         public void SomeMethod()

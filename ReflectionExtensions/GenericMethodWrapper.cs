@@ -35,10 +35,11 @@ namespace ReflectionExtensions
         /// <param name="method">A System.Reflection.MethodBase object that describes a generic method.</param>
         /// <exception cref="System.ArgumentNullException">Thrown if the given method is null.</exception>
         /// <exception cref="System.ArgumentException">Throw if the given method is not generic.</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public GenericMethodWrapper(MethodInfo method)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-            Contract.Requires<ArgumentException>(method.IsGenericMethod, "method");
+            Contract.Requires(method != null, "method");
+            Contract.Requires(method.IsGenericMethod, "method");
             this.WrappedMethod = method;
         }
 
@@ -47,13 +48,14 @@ namespace ReflectionExtensions
             get { return WrappedMethod.GetGenericArguments().Select(a => new GenericParameter(a)); }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments)
         {
             return Invoke<TReturn>(reference, genericArguments, arguments, default(TReturn));
         }
 
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
         public TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments, TReturn defaultValue)
         {
             //Lookup the method in the dictionary

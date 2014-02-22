@@ -26,7 +26,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines a wrapper class for a type.
     /// </summary>
-    public class TypeWrapper : IType
+    public class NonGenericTypeWrapper : INonGenericType
     {
         /// <summary>
         /// Gets the type that this wrapper represents.
@@ -41,7 +41,7 @@ namespace ReflectionExtensions
         /// Creates a new ReflectionExtensions.TypeWrapper object around the given type.
         /// </summary>
         /// <param name="representedType">The type to augment.</param>
-        public TypeWrapper(Type representedType)
+        public NonGenericTypeWrapper(Type representedType)
         {
             Contract.Requires(representedType != null);
             this.RepresentedType = representedType;
@@ -114,16 +114,10 @@ namespace ReflectionExtensions
             get { return RepresentedType.GetConstructors(BindingFlags.Public | BindingFlags.Instance).Select(c => c.Wrap()); }
         }
 
-
-        public IEnumerable<IMethod> GetMethods(string name)
-        {
-            return Methods.Where(m => m.Name.Equals(name));
-        }
-
         public TReturn Invoke<TReturn>(string name, object reference, params object[] arguments)
         {
 
-            INonGenericMethod method = GetMethods(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
+            INonGenericMethod method = Methods.WithName(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => (a == null && !p.ReturnType.IsValueType) || p.ReturnType.IsAssignableFrom(a.GetType())));
             if (method == null)
             {
                 throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
@@ -134,6 +128,17 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
+        /// </summary>
+        /// <param name="name">The case-sensitive name of the method to invoke.</param>
+        /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
+        /// <param name="arguments">A list of objects that should be used as arguments for the invocation.</param>
+        /// <returns>Returns the result of the method call.</returns>
+        public object Invoke(string name, object reference, params object[] arguments)
+        {
+            return Invoke<object>(name, reference, arguments);
+        }
 
         /// <summary>
         /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
@@ -152,9 +157,7 @@ namespace ReflectionExtensions
         /// <returns>Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns null or void.</returns>
         public TReturn Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
         {
-
-
-            INonGenericMethod method = GetMethods(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
+            INonGenericMethod method = Methods.WithName(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
             if (method == null)
             {
                 throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
@@ -177,7 +180,11 @@ namespace ReflectionExtensions
 
         public override bool Equals(object obj)
         {
-            if (obj is IType)
+            if (obj is INonGenericType)
+            {
+                return Equals((INonGenericType)obj);
+            }
+            else if (obj is IType)
             {
                 return Equals((IType)obj);
             }
@@ -187,30 +194,32 @@ namespace ReflectionExtensions
             }
         }
 
-        public bool Equals(IType other)
+        public bool Equals(INonGenericType other)
         {
             return other != null &&
                 this.FullName.Equals(other.FullName) &&
                 this.IsClass == other.IsClass &&
                 this.IsStruct == other.IsStruct &&
                 this.IsAbstract == other.IsAbstract &&
-                this.Assembly.Equals(other.Assembly);
+                this.IsInterface == other.IsInterface &&
+                this.Members.SequenceEqual(other.Members);
+        }
+
+        public bool Equals(IType other)
+        {
+            if (other is INonGenericType)
+            {
+                return Equals((INonGenericType)other);
+            }
+            else
+            {
+                return base.Equals(other);
+            }
         }
 
         public IMethod GetMethod(string name)
         {
             return Methods.SingleOrDefault(m => m.Name.Equals(name));
-        }
-
-
-        public bool IsGenericType
-        {
-            get { return RepresentedType.IsGenericType; }
-        }
-
-        public IEnumerable<IGenericParameter> GenericArguments
-        {
-            get { return RepresentedType.GetGenericArguments().Select(a => new GenericParameter(a)); }
         }
 
         public IType BaseType
@@ -235,24 +244,36 @@ namespace ReflectionExtensions
             {
                 return true;
             }
-
-            IType inheritedType = this.BaseType;
-
-            //Otherwise, go through the inheritance chain and check for the type.
-            while (inheritedType != null && !inheritedType.Equals(objectType))
+            else if (this.Equals(baseType))
             {
-                if (inheritedType.Equals(inheritedType))
+                return true;
+            }
+            else if (baseType.IsInterface)
+            {
+                return this.RepresentedType.GetInterfaces().Any(a => a.Wrap().Equals(baseType));
+            }
+            else
+            {
+                IType inheritedType = this;
+
+                //Otherwise, go through the inheritance chain and check for the type.
+                while (inheritedType != null && !inheritedType.Equals(objectType))
                 {
-                    return true;
+                    if (inheritedType.Equals(baseType))
+                    {
+                        return true;
+                    }
+                    inheritedType = inheritedType.BaseType;
                 }
             }
             return false;
         }
 
-
         public bool IsInterface
         {
             get { return RepresentedType.IsInterface; }
         }
+
+        
     }
 }

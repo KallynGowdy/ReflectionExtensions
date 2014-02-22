@@ -53,7 +53,7 @@ namespace ReflectionExtensions
         /// <param name="reference">A reference to the object whose type contains this method.</param>
         /// <param name="arguments">A list of arguments whose order and type matches the methods signature.</param>
         /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
-        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null or if the given generic arguments array is null.</exception>
+        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null.</exception>
         /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
         /// <returns>Returns the value returned from the method cast into the given type. Returns default(<typeparamref name="TReturn"/>) value if the return type is void or null.</returns>
         TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments);
@@ -67,7 +67,7 @@ namespace ReflectionExtensions
         /// <param name="arguments">A list of arguments whose order and type matches the methods signature.</param>
         /// <param name="defaultValue">The value to return if the returned value from the invocation was void or null.</param>
         /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
-        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null or if the given generic arguments array is null.</exception>
+        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null.</exception>
         /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
         /// <returns>Returns the value returned from the method cast into the given type. Returns default(<typeparamref name="TReturn"/>) value if the return type is void or null.</returns>
         TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments, TReturn defaultValue);

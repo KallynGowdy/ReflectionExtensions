@@ -25,21 +25,6 @@ namespace ReflectionExtensions
     internal static class Util
     {
         /// <summary>
-        /// Throws a new System.ArgumentNullException if the given object is null.
-        /// </summary>
-        /// <param name="obj">The object to check for validity.</param>
-        /// <param name="paramName">The name of the parameter that is being checked.</param>
-        [ContractArgumentValidator]
-        internal static void ThrowIfNull(this object obj, string paramName)
-        {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(paramName);
-            }
-            Contract.EndContractBlock();
-        }
-
-        /// <summary>
         /// Filters the first sequence by comparing it to the second sequence using a given filter.
         /// </summary>
         /// <typeparam name="TFirst">The type of the objects in the first enumerable list.</typeparam>
@@ -50,9 +35,9 @@ namespace ReflectionExtensions
         /// <returns>Returns an enumerable list of <typeparamref name="TFirst"/> objects that was filtered element-by-element using the given function.</returns>
         internal static IEnumerable<TFirst> WhereSequence<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> filter)
         {
-            Contract.Requires<ArgumentNullException>(first != null, "first");
-            Contract.Requires<ArgumentNullException>(second != null, "second");
-            Contract.Requires<ArgumentNullException>(filter != null, "filter");
+            Contract.Requires(first != null, "first");
+            Contract.Requires(second != null, "second");
+            Contract.Requires(filter != null, "filter");
 
             IEnumerator<TFirst> fEnumerator = first.GetEnumerator();
             IEnumerator<TSecond> sEnumerator = second.GetEnumerator();
@@ -78,9 +63,9 @@ namespace ReflectionExtensions
         /// <returns></returns>
         internal static bool SequenceEqual<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> comparer)
         {
-            Contract.Requires<ArgumentNullException>(first != null, "first");
-            Contract.Requires<ArgumentNullException>(second != null, "second");
-            Contract.Requires<ArgumentNullException>(comparer != null, "comparer");
+            Contract.Requires(first != null, "first");
+            Contract.Requires(second != null, "second");
+            Contract.Requires(comparer != null, "comparer");
 
             IEnumerator<TFirst> fEnumerator = first.GetEnumerator();
             IEnumerator<TSecond> sEnumerator = second.GetEnumerator();
@@ -108,7 +93,7 @@ namespace ReflectionExtensions
         /// <returns></returns>
         internal static int HashCode(params object[] values)
         {
-            Contract.Requires<ArgumentNullException>(values != null, "values");
+            Contract.Requires(values != null, "values");
             unchecked
             {
                 int hash = 17;

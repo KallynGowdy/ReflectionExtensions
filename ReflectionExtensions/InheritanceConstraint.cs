@@ -61,6 +61,8 @@ namespace ReflectionExtensions
             private set;
         }
 
+        ///Validation is taken care of by Code Contracts
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public bool MatchesConstraint(IType type)
         {
             bool result = type.InheritsFrom(RequiredType);

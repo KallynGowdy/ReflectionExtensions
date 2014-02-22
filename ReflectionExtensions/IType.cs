@@ -54,14 +54,6 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets whether this type accepts generic arguments.
-        /// </summary>
-        bool IsGenericType
-        {
-            get;
-        }
-
-        /// <summary>
         /// Gets whether this type is a class.
         /// </summary>
         bool IsClass
@@ -89,14 +81,6 @@ namespace ReflectionExtensions
         /// Gets the type that this type inherits from.
         /// </summary>
         IType BaseType
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets the generic arguments that this type accepts.
-        /// </summary>
-        IEnumerable<IGenericParameter> GenericArguments
         {
             get;
         }
@@ -140,44 +124,6 @@ namespace ReflectionExtensions
         /// <returns>Returns true if this type inherits from the given base type, otherwise false.</returns>
         bool InheritsFrom(IType baseType);
 
-        /// <summary>
-        /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
-        /// </summary>
-        /// <typeparam name="TReturn">The type that the returned value should be cast into.</typeparam>
-        /// <param name="name">The case-sensitive name of the method to invoke.</param>
-        /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
-        /// <param name="arguments">A list of objects to use as arguments for the invocation.</param>
-        /// <exception cref="Extensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
-        /// <exception cref="System.MissingMethodException">
-        /// Thrown if the method to invoke does not exist. That is, if there is no method with the given name or no method
-        /// matches the given arguments.
-        /// </exception>
-        /// <exception cref="System.ArgumentException">Thrown if the given reference's type does not equal the type that is described by this value.</exception>
-        /// <exception cref="System.ArgumentNullException">Thrown if the given name or reference is null.</exception>
-        /// <returns>Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns null or void.</returns>
-        TReturn Invoke<TReturn>(string name, object reference, params object[] arguments);
-
-        /// <summary>
-        /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
-        /// </summary>
-        /// <typeparam name="TReturn">The type that the returned value should be cast into.</typeparam>
-        /// <param name="name">The cast sensitive name of the method to invoke.</param>
-        /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
-        /// <param name="genericArguments">A list of System.Type objects to use as generic arguments for the invocation.</param>
-        /// <param name="arguments">A list of objects that should be used as arguments for the invocation.</param>
-        /// <exception cref="System.MissingMethodException">
-        /// Thrown if the method to call does not exist. That is, if there is no method with the given name or there no method matches
-        /// the given arguments.
-        /// </exception>
-        /// <exception cref="Extensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
-        /// <exception cref="System.ArgumentNullException">
-        /// Thrown if the given name or reference is null.
-        /// </exception>
-        /// <exception cref="System.ArgumentException">
-        /// Thrown if the given reference's type does not equal the type that is described by this value.
-        /// </exception>
-        /// <returns>Returns the result of the method call cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns null or void.</returns>
-        TReturn Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments);
 
         /// <summary>
         /// Gets a list of public non-static members that retrieve/set some value.
@@ -234,11 +180,6 @@ namespace ReflectionExtensions
             }
         }
 
-        bool IType.IsGenericType
-        {
-            get { return default(bool); }
-        }
-
         bool IType.IsClass
         {
             get { return default(bool); }
@@ -259,15 +200,6 @@ namespace ReflectionExtensions
             get
             {
                 return default(IType);
-            }
-        }
-
-        IEnumerable<IGenericParameter> IType.GenericArguments
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IGenericParameter>>() != null);
-                return default(IEnumerable<IGenericParameter>);
             }
         }
 
@@ -311,20 +243,6 @@ namespace ReflectionExtensions
         {
             Contract.Requires<ArgumentNullException>(baseType != null, "baseType");
             return default(bool);
-        }
-
-        TReturn IType.Invoke<TReturn>(string name, object reference, params object[] arguments)
-        {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.Requires<ArgumentNullException>(reference != null, "reference");
-            return default(TReturn);
-        }
-
-        TReturn IType.Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
-        {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.Requires<ArgumentNullException>(reference != null, "reference");
-            return default(TReturn);
         }
 
         IEnumerable<IStorageMember> IType.StorageMembers

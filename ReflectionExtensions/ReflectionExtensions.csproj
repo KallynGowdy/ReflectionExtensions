@@ -114,6 +114,7 @@
     <Compile Include="FieldWrapper.cs" />
     <Compile Include="GenericMethodWrapper.cs" />
     <Compile Include="GenericParameter.cs" />
+    <Compile Include="GenericTypeWrapper.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IAccessModifiers.cs" />
     <Compile Include="IConstructorConstraint.cs" />
@@ -126,6 +127,8 @@
     <Compile Include="IMethod.cs" />
     <Compile Include="InheritanceConstraint.cs" />
     <Compile Include="INonGenericMethod.cs" />
+    <Compile Include="IGenericType.cs" />
+    <Compile Include="INonGenericType.cs" />
     <Compile Include="IParameter.cs" />
     <Compile Include="IProperty.cs" />
     <Compile Include="IStorageMember.cs" />
@@ -136,7 +139,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TypeArgumentException.cs" />
-    <Compile Include="TypeWrapper.cs" />
+    <Compile Include="NonGenericTypeWrapper.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

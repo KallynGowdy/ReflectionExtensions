@@ -59,5 +59,10 @@ namespace ReflectionExtensions
 
         }
 
+        /// <summary>
+        /// Creates a new ReflectionExtensions.TypeArgumentException with the given error message.
+        /// </summary>
+        /// <param name="errorMessage"></param>
+        public TypeArgumentException(string errorMessage) : base(errorMessage) { }
     }
 }

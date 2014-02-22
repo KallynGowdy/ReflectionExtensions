@@ -27,6 +27,118 @@ namespace ReflectionExtensions
     /// </summary>
     public static class Extensions
     {
+
+        /// <summary>
+        /// Invokes this method using the given object's members as arugments and infering the generic arguments from those.
+        /// </summary>
+        /// <typeparam name="TReturn">The type to cast the returned value into.</typeparam>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
+        /// <param name="arguments">An object whose member's names match the names of the parameters.</param>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
+        /// <returns>Returns the value returned from the method as an object.</returns>
+        public static object Invoke(this IGenericMethod method, object reference, object arguments)
+        {
+            Contract.Requires(method != null);
+            Contract.Requires(reference != null);
+
+            return method.Invoke<object>(reference, arguments);
+        }
+
+        /// <summary>
+        /// Invokes this method using the given object's members as arugments and infering the generic arguments from those.
+        /// </summary>
+        /// <typeparam name="TReturn">The type to cast the returned value into.</typeparam>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
+        /// <param name="arguments">An object whose member's names match the names of the parameters.</param>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
+        /// <returns>Returns the value returned from the method as an object.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
+        public static TReturn Invoke<TReturn>(this IGenericMethod method, object reference, object arguments)
+        {
+            Contract.Requires(method != null);
+            Contract.Requires(reference != null);
+
+            if (arguments == null)
+            {
+                return method.Invoke<TReturn>(reference, (object[])null);
+            }
+            else
+            {
+                //Match up each argument to a parameter
+                IType argumentsType = arguments.GetType().Wrap();
+
+                var argsAndParams = argumentsType.StorageMembers.Where(a => a.CanRead).GroupJoin(method.Parameters, a => a.Name, p => p.Name, (a, p) => new {Argument=a[arguments], Parameter = p.First()}).OrderBy(ap => ap.Parameter.Position);
+
+                return method.Invoke<TReturn>(reference, argsAndParams.Select(a => a.Argument).ToArray(), default(TReturn));
+            }
+        }
+
+        /// <summary>
+        /// Invokes this method using the given objects as arugments and infering the generic arguments from the given arguments.
+        /// </summary>
+        /// <typeparam name="TReturn">The type to cast the returned value into.</typeparam>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
+        /// <param name="arguments">A list of arguments whose order and type matches the methods in signature.</param>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
+        /// <returns>Returns the value returned from the method as an object.</returns>
+        public static object Invoke(this IGenericMethod method, object reference, object[] arguments)
+        {
+            Contract.Requires(method != null);
+            Contract.Requires(reference != null);
+            Contract.Requires(arguments != null);
+            return method.Invoke<object>(reference, arguments, null);
+        }
+
+        /// <summary>
+        /// Invokes this method using the given objects as arugments and infering the generic arguments from the given arguments.
+        /// </summary>
+        /// <typeparam name="TReturn">The type to cast the returned value into.</typeparam>
+        /// <param name="reference">A reference to the object whose type contains this method.</param>
+        /// <param name="arguments">A list of arguments whose order and type matches the methods in signature.</param>
+        /// <param name="defaultValue">The value to return if the returned value from the invocation was void or null.</param>
+        /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <exception cref="System.ArgumentNullException"> Thrown if the given reference is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
+        /// <returns>Returns the value returned from the method cast into the given type.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "2")]
+        public static TReturn Invoke<TReturn>(this IGenericMethod method, object reference, object[] arguments, TReturn defaultValue)
+        {
+            Contract.Requires(method != null);
+            Contract.Requires(reference != null);
+            Contract.Requires(arguments != null);
+            Contract.Requires(arguments.Length >= method.GenericParameters.Count());
+            
+            Dictionary<IGenericParameter, Type> genericArgsNamesToTypes = new Dictionary<IGenericParameter, Type>();
+
+            var paramsAndArgs = method.Parameters.Zip(arguments, (p, a) => new { Parameter = p, Argument = a });
+
+            foreach (var paramArg in paramsAndArgs)
+            {
+                if (paramArg.Argument == null && paramArg.Parameter.ReturnType.IsValueType)
+                {
+                    throw new ArgumentNullException(paramArg.Parameter.Name);
+                }
+                else
+                {
+                    IGenericParameter genericParam = method.GenericParameters.FirstOrDefault(p => p.Name.Equals(paramArg.Parameter.ReturnType.Name));
+                    if (genericParam != null)
+                    {
+                        if (!genericArgsNamesToTypes.ContainsKey(genericParam))
+                        {
+                            genericArgsNamesToTypes.Add(genericParam, paramArg.Argument.GetType());
+                        }
+                    }
+                }
+            }
+            return method.Invoke<TReturn>(reference, genericArgsNamesToTypes.OrderBy(a => a.Key.Position).Select(a => a.Value).ToArray(), arguments, defaultValue);
+        }
+
         /// <summary>
         /// Wraps the given type in a new ReflectionExtensions.IType object that provides useful functionality.
         /// </summary>
@@ -38,9 +150,13 @@ namespace ReflectionExtensions
             {
                 return null;
             }
+            else if (type.IsGenericType && type.ContainsGenericParameters)
+            {
+                return new GenericTypeWrapper(type);
+            }
             else
             {
-                return new TypeWrapper(type);
+                return new NonGenericTypeWrapper(type);
             }
         }
 
@@ -59,6 +175,7 @@ namespace ReflectionExtensions
         /// </summary>
         /// <param name="method">The method to wrap.</param>
         /// <returns>Returns a new ReflectionExtensions.IMethod object.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public static IMethod Wrap(this MethodBase method)
         {
             Contract.Requires(method != null, "method");
@@ -115,40 +232,6 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets a method from the type that has the given name with arguments of the given types.
-        /// </summary>
-        /// <typeparam name="T1">The type of the first argument that the method takes.</typeparam>
-        /// <param name="type">The type that the method should be retrieved from.</param>
-        /// <param name="name">The case-sensitive name of the method to retreive.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown if the given type or string is null.</exception>
-        /// <returns>Returns a ReflectionExtensions.IMethod object that represents the retrieved method. Returns null if the method could not be
-        /// found.</returns>
-        public static IMethod GetMethod<T1>(this IType type, string name)
-        {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
-            return GetMethod(type, name, new[] { typeof(T1) });
-        }
-
-        /// <summary>
-        /// Gets a method from the type that has the given name with arguments of the given types.
-        /// </summary>
-        /// <typeparam name="T1">The type of the first argument that the method takes.</typeparam>
-        /// <typeparam name="T2">The type of the second argument that the method takes.</typeparam>
-        /// <param name="type">The type that the method should be retrieved from.</param>
-        /// <param name="name">The case-sensitive name of the method to retrieve.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown </exception>
-        /// <returns>Returns a ReflectionExtensions.IMethod object that represents the retrieved method. Returns null if the method could not be found.</returns>
-        public static IMethod GetMethod<T1, T2>(this IType type, string name)
-        {
-            Contract.Requires<ArgumentNullException>(type != null, "The given type must not be null");
-            Contract.Requires<ArgumentNullException>(name != null, "The given name must not be null");
-
-            return GetMethod(type, name, new[] { typeof(T1), typeof(T2) });
-        }
-
-        /// <summary>
         /// Gets a list of methods whose names equal the given name.
         /// </summary>
         /// <param name="name">The case-sensitive name of the methods to retrive.</param>
@@ -170,12 +253,40 @@ namespace ReflectionExtensions
             }
         }
 
-        private static IMethod GetMethod(IType type, string name, Type[] parameterTypes)
+        /// <summary>
+        /// Gets a list of methods from the current list of methods whose parameter's types match the given list of parameter types.
+        /// </summary>
+        /// <param name="methods">The list of methods to search through.</param>
+        /// <param name="parameterTypes">A list of Types that define what the parameter types are required.</param>
+        /// <returns>Returns an enumerable list of methods that contain the given signature.</returns>
+        public static IEnumerable<IMethod> WithParameters(this IEnumerable<IMethod> methods, params Type[] parameterTypes)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-            Contract.Requires<ArgumentNullException>(name != null, "name");
+            Contract.Requires(methods != null);
+            Contract.Requires(parameterTypes != null);
 
-            return type.Methods.Where(m => m.Name.Equals(name)).SingleOrDefault(m => m.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)));
+            var enumerator = methods.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                if (enumerator.Current != null && enumerator.Current.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)))
+                {
+                    yield return enumerator.Current;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a method from the given type that has the given name and signature.
+        /// </summary>
+        /// <param name="methods">The methods to retrieve the method from.</param>
+        /// <param name="name">The name of the method to retrieve.</param>
+        /// <param name="parameterTypes">A list of types that match the required types of the parameters of the method to retrieve.</param>
+        /// <returns>Returns the method that contains the specified signature.</returns>
+        public static IMethod WithSignature(this IEnumerable<IMethod> methods, string name, params Type[] parameterTypes)
+        {
+            Contract.Requires(methods != null, "type");
+            Contract.Requires(name != null, "name");
+
+            return methods.Where(m => m.Name.Equals(name)).SingleOrDefault(m => m.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)));
         }
     }
 }

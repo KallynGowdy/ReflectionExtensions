@@ -16,8 +16,8 @@ namespace ReflectionExtensions
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public GenericParameter(Type type)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "The given type must not be null");
-            Contract.Requires<ArgumentException>(type.IsGenericParameter, "The given type must be a generic parameter.");
+            Contract.Requires(type != null);
+            Contract.Requires(type.IsGenericParameter);
 
             Position = type.GenericParameterPosition;
             Name = type.Name;
@@ -59,6 +59,7 @@ namespace ReflectionExtensions
             this.Constraints = constraints.ToArray();
         }
 
+
         public int Position
         {
             get;
@@ -73,7 +74,7 @@ namespace ReflectionExtensions
 
         public bool MatchesConstraints(IType type)
         {
-            return Constraints.All(c => c.MatchesConstraint(type));
+            return  Constraints.All(c => c.MatchesConstraint(type));
         }
 
         public string Name
