@@ -65,25 +65,21 @@ namespace ReflectionExtensions
 
         T INonGenericMethod.Invoke<T>(object reference, object arguments)
         {
-            Contract.Requires(reference != null, "The given reference must not be null");
             return default(T);
         }
 
         T INonGenericMethod.Invoke<T>(object reference, object arguments, T defaultValue)
         {
-            Contract.Requires(reference != null, "The given reference must not be null");
             return default(T);
         }
 
         TReturn INonGenericMethod.Invoke<TReturn>(object reference, params object[] arguments)
         {
-            Contract.Requires(reference != null, "The given reference must not be null");
             return default(TReturn);
         }
 
         object INonGenericMethod.Invoke(object reference, object arguments)
         {
-            Contract.Requires(reference != null, "The given reference must not be null");
             return default(object);
         }
 

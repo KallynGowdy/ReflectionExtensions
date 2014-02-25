@@ -182,5 +182,86 @@ namespace ReflectionExtensions
         {
             return Util.HashCode(Name, ReturnType, CanRead, CanWrite, EnclosingType);
         }
+
+
+        public bool IsArray
+        {
+            get { return PropertyInfo.PropertyType.IsArray; }
+        }
+
+        public int ArrayRank
+        {
+            get { return PropertyInfo.PropertyType.GetArrayRank(); }
+        }
+
+        public object this[object reference, params int[] indexes]
+        {
+            get
+            {
+                if (CanRead)
+                {
+                    if (IsArray)
+                    {
+                        Array array = (Array)PropertyInfo.GetValue(reference);
+                        if (array != null)
+                        {
+                            return array.GetValue(indexes);
+                        }
+                        else
+                        {
+                            throw new NullReferenceException("The Array is null. Therfore an index cannot be accessed.");
+                        }
+                    }
+                    else
+                    {
+                        if (indexes.Length == 1 && indexes[0] == 0)
+                        {
+                            return this[reference];
+                        }
+                        else
+                        {
+                            throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                        }
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("The Property Cannot Read it's array and therefore cannot retrieve the value at the given index");
+                }
+            }
+            set
+            {
+                if (CanRead)
+                {
+                    if (IsArray)
+                    {
+                        Array array = (Array)PropertyInfo.GetValue(reference);
+                        if (array != null)
+                        {
+                            array.SetValue(value, indexes);
+                        }
+                        else
+                        {
+                            throw new NullReferenceException("The array is null. Therfore an index cannot be accessed");
+                        }
+                    }
+                    else
+                    {
+                        if (indexes.Length == 1 && indexes[0] == 0)
+                        {
+                            this[reference] = value;
+                        }
+                        else
+                        {
+                            throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                        }
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("The Property Cannot Read it's array value and therefore cannot set the value at the given index.");
+                }
+            }
+        }
     }
 }

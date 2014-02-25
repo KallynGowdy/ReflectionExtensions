@@ -129,14 +129,30 @@ namespace ReflectionExtensions
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
         public TReturn Invoke<TReturn>(object reference, params object[] arguments)
         {
-            try
+            ConstructorInfo ctor = WrappedMethod as ConstructorInfo;
+            if (ctor != null)
             {
-                TReturn value = (TReturn)WrappedMethod.Invoke(reference, arguments);
-                return value != null ? value : default(TReturn);
+                try
+                {
+                    TReturn value = (TReturn)ctor.Invoke(arguments);
+                    return value != null ? value : default(TReturn);
+                }
+                catch (InvalidCastException e)
+                {
+                    throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(TReturn)), "TReturn", e);
+                }
             }
-            catch (InvalidCastException e)
+            else
             {
-                throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(TReturn)), "TReturn", e);
+                try
+                {
+                    TReturn value = (TReturn)WrappedMethod.Invoke(reference, arguments);
+                    return value != null ? value : default(TReturn);
+                }
+                catch (InvalidCastException e)
+                {
+                    throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(TReturn)), "TReturn", e);
+                }
             }
         }
 
@@ -146,7 +162,7 @@ namespace ReflectionExtensions
             if (parameters != null)
             {
                 parameters = parameters.OrderBy(v => v.Parameter.Position);
-                return WrappedMethod.Invoke(reference, parameters.Select(v => v.Argument.GetValue(arguments)).ToArray());
+                return Invoke(reference, parameters.Select(v => v.Argument.GetValue(arguments)).ToArray());
             }
             else
             {

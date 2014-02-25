@@ -76,6 +76,71 @@ namespace ReflectionExtensions
             }
         }
 
+
+        public int ArrayRank
+        {
+            get
+            {
+                return WrappedField.FieldType.GetArrayRank();
+            }
+        }
+
+        public object this[object reference, params int[] indexes]
+        {
+            get
+            {
+                if (IsArray)
+                {
+                    Array array = (Array)WrappedField.GetValue(reference);
+                    if (array != null)
+                    {
+                        return array.GetValue(indexes);
+                    }
+                    else
+                    {
+                        throw new NullReferenceException("The Array is null. Therfore an index cannot be accessed.");
+                    }
+                }
+                else
+                {
+                    if (indexes.Length == 1 && indexes[0] == 0)
+                    {
+                        return this[reference];
+                    }
+                    else
+                    {
+                        throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                    }
+                }
+            }
+            set
+            {
+                if (IsArray)
+                {
+                    Array array = (Array)WrappedField.GetValue(reference);
+                    if (array != null)
+                    {
+                        array.SetValue(value, indexes);
+                    }
+                    else
+                    {
+                        throw new NullReferenceException("The array is null. Therfore an index cannot be accessed");
+                    }
+                }
+                else
+                {
+                    if (indexes.Length == 1 && indexes[0] == 0)
+                    {
+                        this[reference] = value;
+                    }
+                    else
+                    {
+                        throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                    }
+                }
+            }
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public object GetValue(object reference)
         {
@@ -190,6 +255,11 @@ namespace ReflectionExtensions
         public override string ToString()
         {
             return Name;
+        }
+
+        public bool IsArray
+        {
+            get { return WrappedField.FieldType.IsArray; }
         }
     }
 }

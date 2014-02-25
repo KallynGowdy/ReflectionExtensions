@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,15 +22,16 @@ using System.Threading.Tasks;
 
 namespace ReflectionExtensions.Tests
 {
+    [TestFixture]
     public class TypeExtensionsTests
     {
         public class GenericType<T, K>
             where T : new()
             where K : IParameter
         {
-            public void Hi(T t, K k)
+            public string Hi(T t, K k)
             {
-                Console.WriteLine("{{{0}, {1}}}", t, k);
+                return string.Format("{{{0}, {1}}}", t, k);
             }
         }
 
@@ -43,65 +45,62 @@ namespace ReflectionExtensions.Tests
 
         public float FloatField = 5;
 
+        [Test]
         public void TestGenerics()
         {
             IType t = typeof(GenericType<,>).Wrap();
 
-            Debug.Assert(t is IGenericType);
+            Assert.That(t, Is.InstanceOf<IGenericType>());
 
             IGenericType genericType = (IGenericType)t;
 
             INonGenericType generatedType = genericType.MakeGenericType(typeof(int), typeof(IParameter));
 
-            Debug.Assert(genericType != null);
+            Assert.That(generatedType, Is.Not.Null);
 
-            generatedType.Invoke("Hi", new GenericType<int, IParameter>(), new object[] { 5, null });
+            string result = generatedType.Invoke<string>("Hi", new GenericType<int, IParameter>(), new object[] { 5, null });
+
+            Assert.That(result, Is.EqualTo("{5, }"));
 
         }
 
+        [Test]
         public void TestWrapper()
         {
             INonGenericType t = typeof(TypeExtensionsTests).Wrap() as INonGenericType;
-            Debug.Assert(t.Members.Count() == 8);
-            Debug.Assert(t.Methods.Where(a => a.Name.Equals("TestWrapper")).Count() == 1);
-
-            foreach (var storage in t.StorageMembers)
-            {
-                Console.WriteLine("{0}: {1}", storage.Name, storage.CanRead ? storage[this] : "Null");
-            }
+            Assert.That(t, Is.Not.Null);
+            Assert.That(t.Members.Count(), Is.EqualTo(8));
+            Assert.That(t.Methods.WithName("TestWrapper").Count(), Is.EqualTo(1));
 
             var equalsMethod = t.Methods.First(a => a.Name.Equals("Equals")) as INonGenericMethod;
 
+            Assert.That(equalsMethod, Is.Not.Null);
+
             //this.Equals(obj: this);
-            Console.WriteLine("Equals(obj: this): {0}", equalsMethod.Invoke<bool>(this, new { obj = this }));
+            bool result = equalsMethod.Invoke<bool>(this, new { obj = this });
+
+            Assert.That(result, Is.True);
 
             //this.Equals(this);
-            Console.WriteLine("Equals(this): {0}", t.Invoke<bool>("Equals", this, this));
+            result = t.Invoke<bool>("Equals", this, this);
 
-            //Test IType equality
+            Assert.That(result, Is.True);
+
+            //Test IType Value equality
             IType other = typeof(TypeExtensionsTests).Wrap();
 
-            Debug.Assert(t.Equals(other) && t.Equals((object)other) && other.Equals(t) && other.Equals((object)t));
-            Console.WriteLine("Type Equality: (IType) {0}, (Object) {1}", t.Equals(other), t.Equals((object)other));
+            Assert.That(t, Is.EqualTo(other));
+            Assert.That(t, Is.EqualTo((object)other));
+            Assert.That(other, Is.EqualTo(t));
+            Assert.That(other, Is.EqualTo((object)t));
 
             int tHash = t.GetHashCode();
             int otherHash = other.GetHashCode();
-            Debug.Assert(tHash == otherHash);
-
-            Console.WriteLine("Hash Code Equality: {0}, {1}, Equal: {2}", tHash, otherHash, tHash == otherHash);
+            Assert.That(tHash, Is.EqualTo(otherHash));
 
             bool equalsOperatorTest = other == t;
 
-            Debug.Assert(!equalsOperatorTest);
-
-            Console.WriteLine("t and other compare as {0} values", equalsOperatorTest ? "the same" : "different");
-
-            bool diffReferences = !Object.ReferenceEquals(other, t);
-
-            //Reference Equality
-            Debug.Assert(diffReferences);
-
-            Console.WriteLine("t and other refer to {0} instances", diffReferences ? "different" : "the same");
+            Assert.That(other, Is.Not.SameAs(t));
         }
 
     }

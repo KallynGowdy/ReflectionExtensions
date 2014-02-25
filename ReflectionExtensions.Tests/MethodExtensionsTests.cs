@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,6 +23,7 @@ using System.Threading.Tasks;
 
 namespace ReflectionExtensions.Tests
 {
+    [TestFixture]
     public class MethodExtensionsTests
     {
         public int Int
@@ -30,6 +32,7 @@ namespace ReflectionExtensions.Tests
             set;
         }
 
+        [Test]
         public void TestWrappers()
         {
             IType t = typeof(MethodExtensionsTests).Wrap();
@@ -46,6 +49,7 @@ namespace ReflectionExtensions.Tests
             Debug.Assert(result == null);
         }
 
+        [Test]
         public void TestCorrectGenericConstraints()
         {
             IType t = typeof(MethodExtensionsTests).Wrap();
@@ -59,53 +63,46 @@ namespace ReflectionExtensions.Tests
             Debug.Assert(value.Item1.Equals("Hello!"));
             Debug.Assert(value.Item2.Equals(15));
             Debug.Assert(value.Item3.Equals(0d));
-            Console.WriteLine(value);            
+            Console.WriteLine(value);
         }
 
+        [Test]
+        [ExpectedException(typeof(ArgumentException))]
         public void TestIncorectGenericConstraints()
         {
             IType t = typeof(MethodExtensionsTests).Wrap();
 
-            Debug.Assert(t != null);
+            Assert.That(t, Is.Not.Null);
 
             IGenericMethod method = t.Methods.WithName("ConstraintTestMethod").SingleOrDefault() as IGenericMethod;
-            Debug.Assert(method != null);
+            Assert.That(method, Is.Not.Null);
 
-            try
-            {
-                //object is not a struct
-                Tuple<string, int, object> badValue = method.Invoke<Tuple<string, int, object>>(this, new[] { typeof(string), typeof(int), typeof(object) }, new object[] { "Hello!", 15 });
-                Debug.Assert(false);
-            }
-            catch (ArgumentNullException)
-            {
-                Debug.Assert(false);
-            }
-            catch (ArgumentException)
-            {
-                Console.WriteLine("Good!");
-            }
+            //object is not a struct
+            Tuple<string, int, object> badValue = method.Invoke<Tuple<string, int, object>>(this, new[] { typeof(string), typeof(int), typeof(object) }, new object[] { "Hello!", 15 });
+            Assert.That(false);
         }
 
+        [Test]
         public void TestMethodExtensions()
         {
             IType t = typeof(MethodExtensionsTests).Wrap();
 
-            Debug.Assert(t != null);
+            Assert.That(t, Is.Not.Null);
 
             INonGenericMethod method = t.Methods.WithSignature("GetString", typeof(int), typeof(string)) as INonGenericMethod;
 
             string result = method.Invoke<string>(this, new { age = 10, name = "My Name" });
-            Debug.Assert(result == "Name: My Name, Age: 10");
+            Assert.That(result, Is.EqualTo("Name: My Name, Age: 10"));
         }
 
+        [Test]
         public void TestGenericInferredUsage()
         {
             IType thisType = typeof(MethodExtensionsTests).Wrap();
 
             IGenericMethod gm = thisType.Methods.WithName("InferredMethod1").Single() as IGenericMethod;
 
-            Debug.Assert(gm != null);
+            Assert.That(gm, Is.Not.Null);
 
             gm.Invoke<object>(this, new object[] { 5 }, null);
             gm.Invoke<object>(this, new object[] { "Hi!" }, null);
@@ -113,21 +110,22 @@ namespace ReflectionExtensions.Tests
             gm = thisType.Methods.WithName("InferredMethod2").Single() as IGenericMethod;
 
             Tuple<float, string> result = gm.Invoke<Tuple<float, string>>(this, new object[] { 5.2f, "My Name is:" }, null);
-            Debug.Assert(result != null);
-            Debug.Assert(result.Item1 == 5.2f);
-            Debug.Assert(result.Item2 == "My Name is:");
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Item1, Is.EqualTo(5.2f));
+            Assert.That(result.Item2, Is.EqualTo("My Name is:"));
 
             result = gm.Invoke<Tuple<float, string>>(this, new { key = 5.2f, value = "Value!" });
-            Debug.Assert(result != null);
-            Debug.Assert(result.Item1 == 5.2f);
-            Debug.Assert(result.Item2 == "Value!");
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Item1, Is.EqualTo(5.2f));
+            Assert.That(result.Item2, Is.EqualTo("Value!"));
 
             object objResult = gm.Invoke(this, new { key = 5.2f, value = "Value!" });
-            Debug.Assert(objResult != null);
-            Debug.Assert(objResult is Tuple<float, string>);
+            Assert.That(objResult, Is.Not.Null);
+            Assert.That(objResult, Is.InstanceOf<Tuple<float, string>>());
+            
             result = (Tuple<float, string>)objResult;
-            Debug.Assert(result.Item1 == 5.2f);
-            Debug.Assert(result.Item2 == "Value!");
+            Assert.That(result.Item1, Is.EqualTo(5.2f));
+            Assert.That(result.Item2, Is.EqualTo("Value!"));
         }
 
         public string GetString(int age, string name)
