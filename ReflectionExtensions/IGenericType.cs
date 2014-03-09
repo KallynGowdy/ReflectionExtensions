@@ -150,5 +150,10 @@ namespace ReflectionExtensions
         {
             return default(bool);
         }
+
+        public AccessModifier Access
+        {
+            get { return default(AccessModifier); }
+        }
     }
 }

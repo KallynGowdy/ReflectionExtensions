@@ -30,6 +30,14 @@ namespace ReflectionExtensions
     public interface IType : IEquatable<IType>
     {
         /// <summary>
+        /// Gets the access modifiers that are applied to this type.
+        /// </summary>
+        AccessModifier Access
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the simple name of the type.
         /// </summary>
         string Name
@@ -155,6 +163,7 @@ namespace ReflectionExtensions
     {
         string IType.Name
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<string>() != null);
@@ -164,6 +173,7 @@ namespace ReflectionExtensions
 
         string IType.FullName
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<string>() != null);
@@ -173,6 +183,7 @@ namespace ReflectionExtensions
 
         Assembly IType.Assembly
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<Assembly>() != null);
@@ -182,21 +193,25 @@ namespace ReflectionExtensions
 
         bool IType.IsClass
         {
+            [Pure]
             get { return default(bool); }
         }
 
         bool IType.IsStruct
         {
+            [Pure]
             get { return default(bool); }
         }
 
         bool IType.IsAbstract
         {
+            [Pure]
             get { return default(bool); }
         }
 
         IType IType.BaseType
         {
+            [Pure]
             get
             {
                 return default(IType);
@@ -205,6 +220,7 @@ namespace ReflectionExtensions
 
         IEnumerable<IMember> IType.Members
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<IEnumerable<IMember>>() != null);
@@ -214,6 +230,7 @@ namespace ReflectionExtensions
 
         IEnumerable<IField> IType.Fields
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<IEnumerable<IField>>() != null);
@@ -223,6 +240,7 @@ namespace ReflectionExtensions
 
         IEnumerable<IProperty> IType.Properties
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<IEnumerable<IProperty>>() != null);
@@ -232,6 +250,7 @@ namespace ReflectionExtensions
 
         IEnumerable<IMethod> IType.Methods
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<IEnumerable<IMethod>>() != null);
@@ -239,6 +258,7 @@ namespace ReflectionExtensions
             }
         }
 
+        [Pure]
         bool IType.InheritsFrom(IType baseType)
         {
             Contract.Requires<ArgumentNullException>(baseType != null, "baseType");
@@ -247,6 +267,7 @@ namespace ReflectionExtensions
 
         IEnumerable<IStorageMember> IType.StorageMembers
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<IEnumerable<IStorageMember>>() != null);
@@ -256,6 +277,7 @@ namespace ReflectionExtensions
 
         IEnumerable<IMethod> IType.Constructors
         {
+            [Pure]
             get
             {
                 Contract.Ensures(Contract.Result<IEnumerable<IMethod>>() != null);
@@ -263,18 +285,25 @@ namespace ReflectionExtensions
             }
         }
 
+        [Pure]
         bool IEquatable<IType>.Equals(IType other)
         {
             return default(bool);
         }
 
-
         bool IType.IsInterface
         {
+            [Pure]
             get
             {
                 return default(bool);
             }
+        }
+
+        public AccessModifier Access
+        {
+            [Pure]
+            get { return default(AccessModifier); }
         }
     }
 }

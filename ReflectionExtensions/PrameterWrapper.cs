@@ -20,64 +20,115 @@ using System.Text;
 
 namespace ReflectionExtensions
 {
-    class PrameterWrapper : IParameter
+    class ParameterWrapper : IParameter
     {
-        public PrameterWrapper(System.Reflection.ParameterInfo parameter)
+        public ParameterWrapper(System.Reflection.ParameterInfo parameter)
         {
             this.WrappedParameter = parameter;
         }
 
+        /// <summary>
+        /// Gets the wrapped parameter.
+        /// </summary>
+        /// <value>
+        /// The wrapped parameter.
+        /// </value>
         public ParameterInfo WrappedParameter
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Gets the method that this parameter belongs to.
+        /// </summary>
         public IMethod Method
         {
             get { return WrappedParameter.Member.Wrap() as IMethod; }
         }
 
+        /// <summary>
+        /// Gets the position in the list of arguments that is given to the method.
+        /// </summary>
         public int Position
         {
             get { return WrappedParameter.Position; }
         }
 
+        /// <summary>
+        /// Gets whether this parameter has a default value.
+        /// </summary>
         public bool HasDefaultValue
         {
             get { return WrappedParameter.HasDefaultValue; }
         }
 
+        /// <summary>
+        /// Gets the default value of the parameter.
+        /// </summary>
         public object DefaultValue
         {
             get { return WrappedParameter.DefaultValue; }
         }
 
+        /// <summary>
+        /// Gets the name of the member.
+        /// </summary>
         public string Name
         {
             get { return WrappedParameter.Name; }
         }
 
+        /// <summary>
+        /// Gets the type that this member uses.
+        /// Returns the return type for methods, null if the return type is void.
+        /// Returns the field/property type for fields/properties.
+        /// Returns the enclosing type for constructors.
+        /// Returns the accepted type for parameters.
+        /// Returns null for generic parameters.
+        /// </summary>
         public Type ReturnType
         {
             get { return WrappedParameter.ParameterType; }
         }
 
+        /// <summary>
+        /// Gets the type that this member belongs to.
+        /// </summary>
         public Type EnclosingType
         {
             get { return WrappedParameter.Member.ReflectedType; }
         }
 
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
         public override string ToString()
         {
             return string.Format("{0}({1})", this.Name, this.ReturnType);
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
         public override int GetHashCode()
         {
-            return Util.HashCode(Name, Position, ReturnType, EnclosingType);
+            return Util.HashCode(29137, Name, Position, ReturnType, EnclosingType);
         }
 
+        /// <summary>
+        /// Determines if this <see cref="ParameterWrapper"/> object equals the given <see cref="Object"/> object.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the obj object, otherwise false.
+        /// </returns>
         public override bool Equals(object obj)
         {
             if (obj is IParameter)
@@ -94,6 +145,13 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Determines if this <see cref="ParameterWrapper"/> object equals the given <see cref="IMember"/> object.
+        /// </summary>
+        /// <param name="other">The <see cref="IMember"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
         public bool Equals(IMember other)
         {
             if (other is IParameter)
@@ -106,6 +164,13 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Determines if this <see cref="ParameterWrapper"/> object equals the given <see cref="IParameter"/> object.
+        /// </summary>
+        /// <param name="other">The <see cref="IParameter"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
         public bool Equals(IParameter other)
         {
             return other != null &&

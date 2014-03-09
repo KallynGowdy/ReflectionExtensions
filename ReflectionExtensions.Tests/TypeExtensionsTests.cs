@@ -69,7 +69,7 @@ namespace ReflectionExtensions.Tests
         {
             INonGenericType t = typeof(TypeExtensionsTests).Wrap() as INonGenericType;
             Assert.That(t, Is.Not.Null);
-            Assert.That(t.Members.Count(), Is.EqualTo(8));
+            Assert.That(t.Members.Count(), Is.EqualTo(typeof(TypeExtensionsTests).GetMembers().Length));
             Assert.That(t.Methods.WithName("TestWrapper").Count(), Is.EqualTo(1));
 
             var equalsMethod = t.Methods.First(a => a.Name.Equals("Equals")) as INonGenericMethod;

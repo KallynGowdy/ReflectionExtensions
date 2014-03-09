@@ -22,6 +22,9 @@ using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
+    /// <summary>
+    /// Defines an internal static class that provides serveral utility methods.
+    /// </summary>
     internal static class Util
     {
         /// <summary>
@@ -33,6 +36,7 @@ namespace ReflectionExtensions
         /// <param name="second">The list that should be used to filter the first.</param>
         /// <param name="filter">A function that, given and object from the first list and an object from the second, returns whether the element should be included in the output.</param>
         /// <returns>Returns an enumerable list of <typeparamref name="TFirst"/> objects that was filtered element-by-element using the given function.</returns>
+        [Pure]
         internal static IEnumerable<TFirst> WhereSequence<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> filter)
         {
             Contract.Requires(first != null, "first");
@@ -60,7 +64,8 @@ namespace ReflectionExtensions
         /// <param name="first">An enumerable list of objects of the type <typeparamref name="TFirst"/> that should be compared to the second.</param>
         /// <param name="second">An enumerable list of objects of the type <typeparamref name="TSecond"/> that should be compared to the first.</param>
         /// <param name="comparer">A function that, given an object from the first list and an object from the second determines if the two should be considered equal.</param>
-        /// <returns></returns>
+        /// <returns>Returns whether the two sequences are equal as determined by the given comparer.</returns>
+        [Pure]
         internal static bool SequenceEqual<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> comparer)
         {
             Contract.Requires(first != null, "first");
@@ -89,18 +94,21 @@ namespace ReflectionExtensions
         /// <summary>
         /// Calculates the hash code of the given values.
         /// </summary>
+        /// <param name="primeNumber">The prime number that should be used as the starting point for the hash code.</param>
         /// <param name="values">The values to calculate the hash code of.</param>
         /// <returns></returns>
-        internal static int HashCode(params object[] values)
+        [Pure]
+        internal static int HashCode(int primeNumber, params object[] values)
         {
             Contract.Requires(values != null, "values");
             unchecked
             {
-                int hash = 17;
+                int hash = primeNumber;
 
                 foreach (object val in values)
                 {
-                    hash = hash * 23 + val.GetHashCode();
+                    if (val != null)
+                        hash = hash * 23 + val.GetHashCode();
                 }
 
                 return hash;
@@ -112,6 +120,7 @@ namespace ReflectionExtensions
         /// </summary>
         /// <param name="member">The member to get the access modifiers for.</param>
         /// <returns>Returns the access modifiers that the member has.</returns>
+        [Pure]
         internal static AccessModifier GetAccessModifiers(this MethodBase member)
         {
             Contract.Requires<ArgumentNullException>(member != null, "member");
@@ -138,6 +147,48 @@ namespace ReflectionExtensions
             else
             {
                 return AccessModifier.ProtectedOrInternal;
+            }
+        }
+
+        /// <summary>
+        /// Gets the access modifiers that are present on the given type.
+        /// </summary>
+        /// <param name="type">The type for which the access modifiers should be retrieved.</param>
+        /// <returns>Returns the access modifiers that the member has.</returns>
+        [Pure]
+        internal static AccessModifier GetAccessModifiers(this Type type)
+        {
+            Contract.Requires<ArgumentNullException>(type != null, "member");
+            if (type.IsNested)
+            {
+                if (type.IsNestedPublic)
+                {
+                    return AccessModifier.Public;
+                }
+                else if (type.IsNestedPrivate)
+                {
+                    return AccessModifier.Private;
+                }
+                else if (type.IsNestedFamily)
+                {
+                    return AccessModifier.Protected;
+                }
+                else if (type.IsNestedFamANDAssem)
+                {
+                    return AccessModifier.ProtectedAndInternal;
+                }
+                else if (type.IsNestedAssembly)
+                {
+                    return AccessModifier.Internal;
+                }
+                else
+                {
+                    return AccessModifier.ProtectedOrInternal;
+                }
+            }
+            else
+            {
+                return type.IsPublic ? AccessModifier.Public : AccessModifier.Internal;
             }
         }
     }

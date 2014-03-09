@@ -1,4 +1,18 @@
-﻿using System;
+﻿// Copyright 2014 Kallyn Gowdy
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -11,7 +25,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines a wrapper class for a generic type.
     /// </summary>
-    public class GenericTypeWrapper : IGenericType
+    public class GenericTypeWrapper : TypeWrapperBase, IGenericType
     {
         /// <summary>
         /// A dictionary that relates generated types to type argument list names.
@@ -19,28 +33,21 @@ namespace ReflectionExtensions
         private Dictionary<string, NonGenericTypeWrapper> generatedTypes = new Dictionary<string, NonGenericTypeWrapper>();
 
         /// <summary>
-        /// Gets the type that this wrapper augments.
-        /// </summary>
-        public Type WrappedType
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// Creates a new GenericTypeWrapper from the given type.
         /// </summary>
         /// <param name="type">The type to wrap.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public GenericTypeWrapper(Type type)
+        public GenericTypeWrapper(Type type) : base(type)
         {
             Contract.Requires(type != null);
             Contract.Requires(type.IsGenericType);
             Contract.Requires(type.ContainsGenericParameters);
             Contract.Ensures(WrappedType != null);
-            WrappedType = type;
         }
 
+        /// <summary>
+        /// Gets the list of generic type parameters that can be passed to this type.
+        /// </summary>
         public IEnumerable<IGenericParameter> TypeParameters
         {
             get { return WrappedType.GetGenericArguments().Where(a => a.IsGenericParameter).Select(a => new GenericParameter(a)); }
@@ -53,9 +60,18 @@ namespace ReflectionExtensions
         /// <returns></returns>
         private static string getKey(Type[] types)
         {
+            Contract.Requires(types != null);
             return string.Join<Type>(", ", types);
         }
 
+        /// <summary>
+        /// Creates a new ReflectionExtensions.INonGenericType from this type using the given types as arguments.
+        /// </summary>
+        /// <param name="typeArguments">The list of type arguments to use for the new type.</param>
+        /// <returns>
+        /// Returns a new ReflectionINonGenericType.
+        /// </returns>
+        /// <exception cref="System.ArgumentException">One or more of the given type arguments does not match a constraint.</exception>
         public INonGenericType MakeGenericType(params Type[] typeArguments)
         {
             string key = getKey(typeArguments);
@@ -83,116 +99,37 @@ namespace ReflectionExtensions
             }
         }
 
-        public string Name
-        {
-            get { return WrappedType.Name; }
-        }
+        int? hashCode = null;
 
-        public string FullName
-        {
-            get { return WrappedType.FullName; }
-        }
-
-        public System.Reflection.Assembly Assembly
-        {
-            get { return WrappedType.Assembly; }
-        }
-
+        /// <summary>
+        /// Gets a value indicating whether [is generic type].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [is generic type]; otherwise, <c>false</c>.
+        /// </value>
         public bool IsGenericType
         {
             get { return WrappedType.IsGenericType; }
         }
 
-        public bool IsClass
-        {
-            get { return WrappedType.IsClass; }
-        }
-
-        public bool IsStruct
-        {
-            get { return WrappedType.IsValueType; }
-        }
-
-        public bool IsAbstract
-        {
-            get { return WrappedType.IsAbstract; }
-        }
-
-        public IType BaseType
-        {
-            get { return WrappedType.BaseType.Wrap(); }
-        }
-
+        /// <summary>
+        /// Gets the generic arguments.
+        /// </summary>
+        /// <value>
+        /// The generic arguments.
+        /// </value>
         public IEnumerable<IGenericParameter> GenericArguments
         {
             get { return WrappedType.GetGenericArguments().Select(a => new GenericParameter(a)); }
         }
-
-        public IEnumerable<IMember> Members
-        {
-            get { return WrappedType.GetMembers(BindingFlags.Public | BindingFlags.Instance).Select(m => m.Wrap()); }
-        }
-
-        public IEnumerable<IField> Fields
-        {
-            get { return WrappedType.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(f => f.Wrap()); }
-        }
-
-        public IEnumerable<IProperty> Properties
-        {
-            get { return WrappedType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Wrap()); }
-        }
-
-        public IEnumerable<IMethod> Methods
-        {
-            get { return WrappedType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Select(m => m.Wrap()); }
-        }
-
-        public bool InheritsFrom(IType baseType)
-        {
-            IType objectType = typeof(object).Wrap();
-            if (baseType.Equals(objectType))
-            {
-                return true;
-            }
-
-            if (baseType.IsInterface)
-            {
-                return this.WrappedType.GetInterfaces().Any(a => a.Wrap().Equals(baseType));
-            }
-            else
-            {
-                IType inheritedType = this.BaseType;
-
-                //Otherwise, go through the inheritance chain and check for the type.
-                while (inheritedType != null && !inheritedType.Equals(objectType))
-                {
-                    if (inheritedType.Equals(inheritedType))
-                    {
-                        return true;
-                    }
-                    inheritedType = inheritedType.BaseType;
-                }
-            }
-            return false;
-        }
-
-        public IEnumerable<IStorageMember> StorageMembers
-        {
-            get { return Members.OfType<IStorageMember>(); }
-        }
-
-        public IEnumerable<IMethod> Constructors
-        {
-            get { return WrappedType.GetConstructors().Select(c => c.Wrap()); }
-        }
-
-        public bool IsInterface
-        {
-            get { return WrappedType.IsInterface; }
-        }
-
-        public bool Equals(IType other)
+        /// <summary>
+        /// Determines if this <see cref="GenericTypeWrapper"/> object equals the given <see cref="IType"/> object.
+        /// </summary>
+        /// <param name="other">The <see cref="IType"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
+        public override bool Equals(IType other)
         {
             if (other is IGenericType)
             {
@@ -204,12 +141,72 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Determines if this <see cref="GenericTypeWrapper"/> object equals the given <see cref="IGenericType"/> object.
+        /// </summary>
+        /// <param name="other">The <see cref="IGenericType"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
         public bool Equals(IGenericType other)
         {
             return other != null &&
                 this.Name.Equals(other.Name) &&
-                this.Members.SequenceEqual(other.Members) &&
+                this.Access == other.Access &&
+                this.IsAbstract == other.IsAbstract &&
+                this.IsClass == other.IsClass &&
+                this.IsStruct == other.IsStruct &&
+                this.IsInterface == other.IsInterface &&
                 this.TypeParameters.SequenceEqual(other.TypeParameters);
+        }
+
+        /// <summary>
+        /// Determines if this <see cref="GenericTypeWrapper"/> object equals the given <see cref="Object"/> object.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the obj object, otherwise false.
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is IGenericType)
+            {
+                return Equals((IGenericType)obj);
+            }
+            else if (obj is IType)
+            {
+                return Equals((IType)obj);
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+        }
+
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
+        public override int GetHashCode()
+        {
+            if (!hashCode.HasValue)
+            {
+                hashCode = Util.HashCode(15761, base.GetHashCode(), TypeParameters);
+            }
+            return hashCode.Value;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            return string.Format("{0} {1} {2}<{3}> {4}", this.Access, (IsClass ? "class" : (IsInterface ? "interface" : "struct")), this.Name, string.Join(", ", GenericArguments), this.BaseType != null ? " : " + this.BaseType.ToString() : string.Empty);
         }
     }
 }

@@ -27,6 +27,11 @@ namespace ReflectionExtensions
     [Serializable]
     public class TypeArgumentException : ArgumentException
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TypeArgumentException"/> class.
+        /// </summary>
+        /// <param name="serializationInfo">The serialization information.</param>
+        /// <param name="context">The context.</param>
         protected TypeArgumentException(SerializationInfo serializationInfo, StreamingContext context) : base(serializationInfo, context) { }
 
         /// <summary>

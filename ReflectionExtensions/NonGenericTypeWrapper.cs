@@ -26,94 +26,28 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines a wrapper class for a type.
     /// </summary>
-    public class NonGenericTypeWrapper : INonGenericType
+    public class NonGenericTypeWrapper : TypeWrapperBase, INonGenericType
     {
-        /// <summary>
-        /// Gets the type that this wrapper represents.
-        /// </summary>
-        public Type RepresentedType
-        {
-            get;
-            private set;
-        }
-
         /// <summary>
         /// Creates a new ReflectionExtensions.TypeWrapper object around the given type.
         /// </summary>
         /// <param name="representedType">The type to augment.</param>
-        public NonGenericTypeWrapper(Type representedType)
+        public NonGenericTypeWrapper(Type representedType) : base(representedType)
         {
             Contract.Requires(representedType != null);
-            this.RepresentedType = representedType;
-        }
-
-        public System.Reflection.Assembly Assembly
-        {
-            get { return RepresentedType.Assembly; }
-        }
-
-        public bool IsClass
-        {
-            get { return RepresentedType.IsClass; }
-        }
-
-        public bool IsStruct
-        {
-            get { return RepresentedType.IsValueType; }
-        }
-
-        public bool IsAbstract
-        {
-            get { return RepresentedType.IsAbstract; }
-        }
-
-        public string Name
-        {
-            get { return RepresentedType.Name; }
-        }
-
-        public string FullName
-        {
-            get { return RepresentedType.FullName; }
-        }
-
-        public IEnumerable<IMember> Members
-        {
-            get { return Fields.OfType<IMember>().Concat(Properties).Concat(Methods); }
-        }
-
-        public IEnumerable<IField> Fields
-        {
-            get { return RepresentedType.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(f => f.Wrap()); }
-        }
-
-        public IEnumerable<IProperty> Properties
-        {
-            get { return RepresentedType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Wrap()); }
         }
 
         /// <summary>
-        /// Gets a list of public non-static not auto-generated methods that belong to this type.
+        /// Invokes the method with the given case-sensitive name in the context of the given reference using the given objects as arguments.
         /// </summary>
-        public IEnumerable<IMethod> Methods
-        {
-            get
-            {
-                return RepresentedType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => !m.IsSpecialName).Select(m => m.Wrap());
-            }
-        }
-
-        public IEnumerable<IStorageMember> StorageMembers
-        {
-            get { return Fields.OfType<IStorageMember>().Concat(Properties); }
-        }
-
-
-        public IEnumerable<IMethod> Constructors
-        {
-            get { return RepresentedType.GetConstructors(BindingFlags.Public | BindingFlags.Instance).Select(c => c.Wrap()); }
-        }
-
+        /// <typeparam name="TReturn">The type that the returned value should be cast into.</typeparam>
+        /// <param name="name">The case-sensitive name of the method to invoke.</param>
+        /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
+        /// <param name="arguments">A list of objects to use as arguments for the invocation.</param>
+        /// <returns>
+        /// Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn" />) if the method returns null or void.
+        /// </returns>
+        /// <exception cref="System.MissingMethodException"></exception>
         public TReturn Invoke<TReturn>(string name, object reference, params object[] arguments)
         {
 
@@ -146,15 +80,16 @@ namespace ReflectionExtensions
         /// <typeparam name="TReturn">The type that the returned value should be cast into.</typeparam>
         /// <param name="name">The case-sensitive name of the method to invoke.</param>
         /// <param name="reference">A reference to the object whose type contains the method to invoke.</param>
+        /// <param name="genericArguments">A list of System.Type objects to use as generic arguments for the invocation.</param>
         /// <param name="arguments">A list of objects to use as arguments for the invocation.</param>
-        /// <exception cref="Extensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
-        /// <exception cref="System.MissingMethodException">
-        /// Thrown if the method to invoke does not exist. That is, if there is no method with the given name or no method
-        /// matches the given arguments.
-        /// </exception>
+        /// <returns>
+        /// Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn" />) if the method returns null or void.
+        /// </returns>
+        /// <exception cref="System.MissingMethodException">Thrown if the method to invoke does not exist. That is, if there is no method with the given name or no method
+        /// matches the given arguments.</exception>
+        /// <exception cref="T:Extensions.TypeArgumentException">Thrown if the value returned from the method cannot be cast into the given type.</exception>
         /// <exception cref="System.ArgumentException">Thrown if the given reference's type does not equal the type that is described by this value.</exception>
         /// <exception cref="System.ArgumentNullException">Thrown if the given name or reference is null.</exception>
-        /// <returns>Returns the result of the method invocation cast into the given type. Returns default(<typeparamref name="TReturn"/>) if the method returns null or void.</returns>
         public TReturn Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
         {
             INonGenericMethod method = Methods.WithName(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
@@ -168,16 +103,35 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
         public override int GetHashCode()
         {
-            return Util.HashCode(FullName, IsClass, IsStruct, IsAbstract, Assembly);
+            return base.GetHashCode();
         }
 
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
         public override string ToString()
         {
-            return Name;
+            return string.Format("{0} {1} {2} {3}", Access, (IsClass ? "class" : (IsInterface ? "interface" : "struct")), Name, BaseType != null ? ": " + BaseType : string.Empty);
         }
 
+        /// <summary>
+        /// Determines if this <see cref="NonGenericTypeWrapper"/> object equals the given <see cref="Object"/> object.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the obj object, otherwise false.
+        /// </returns>
         public override bool Equals(object obj)
         {
             if (obj is INonGenericType)
@@ -194,6 +148,13 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Determines if this <see cref="NonGenericTypeWrapper"/> object equals the given <see cref="INonGenericType"/> object.
+        /// </summary>
+        /// <param name="other">The <see cref="INonGenericType"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
         public bool Equals(INonGenericType other)
         {
             return other != null &&
@@ -201,11 +162,17 @@ namespace ReflectionExtensions
                 this.IsClass == other.IsClass &&
                 this.IsStruct == other.IsStruct &&
                 this.IsAbstract == other.IsAbstract &&
-                this.IsInterface == other.IsInterface &&
-                this.Members.SequenceEqual(other.Members);
+                this.IsInterface == other.IsInterface;
         }
 
-        public bool Equals(IType other)
+        /// <summary>
+        /// Determines if this <see cref="NonGenericTypeWrapper"/> object equals the given <see cref="IType"/> object.
+        /// </summary>
+        /// <param name="other">The <see cref="IType"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
+        public override bool Equals(IType other)
         {
             if (other is INonGenericType)
             {
@@ -217,63 +184,14 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Gets a method with the given name.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
         public IMethod GetMethod(string name)
         {
             return Methods.SingleOrDefault(m => m.Name.Equals(name));
         }
-
-        public IType BaseType
-        {
-            get
-            {
-                return RepresentedType.BaseType.Wrap();
-            }
-        }
-
-        /// <summary>
-        /// Determines if this type inherits from the given base type.
-        /// </summary>
-        /// <param name="baseType">The type to check inheritance from.</param>
-        /// <returns>Returns true if this type inherits from the given base type, otherwise false.</returns>
-        public bool InheritsFrom(IType baseType)
-        {
-            IType objectType = typeof(object).Wrap();
-
-            //Every object inherits from System.Object
-            if (baseType.Equals(objectType))
-            {
-                return true;
-            }
-            else if (this.Equals(baseType))
-            {
-                return true;
-            }
-            else if (baseType.IsInterface)
-            {
-                return this.RepresentedType.GetInterfaces().Any(a => a.Wrap().Equals(baseType));
-            }
-            else
-            {
-                IType inheritedType = this;
-
-                //Otherwise, go through the inheritance chain and check for the type.
-                while (inheritedType != null && !inheritedType.Equals(objectType))
-                {
-                    if (inheritedType.Equals(baseType))
-                    {
-                        return true;
-                    }
-                    inheritedType = inheritedType.BaseType;
-                }
-            }
-            return false;
-        }
-
-        public bool IsInterface
-        {
-            get { return RepresentedType.IsInterface; }
-        }
-
-        
     }
 }

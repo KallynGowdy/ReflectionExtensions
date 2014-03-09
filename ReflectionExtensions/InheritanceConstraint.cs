@@ -1,4 +1,18 @@
-﻿using System;
+﻿// Copyright 2014 Kallyn Gowdy
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -7,7 +21,7 @@ using System.Text;
 namespace ReflectionExtensions
 {
     /// <summary>
-    /// Defines a basic class that 
+    /// Defines a basic class that specifies that a given type parameter inherit from a certian type.
     /// </summary>
     public class InheritanceConstraint : IInheritanceConstraint
     {
@@ -31,6 +45,11 @@ namespace ReflectionExtensions
             this.RequiredType = type.Wrap();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InheritanceConstraint"/> class.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <param name="invert">if set to <c>true</c> [invert].</param>
         public InheritanceConstraint(Type type, bool invert)
         {
             Contract.Requires(type != null);
@@ -38,6 +57,11 @@ namespace ReflectionExtensions
             this.Invert = invert;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InheritanceConstraint"/> class.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <param name="invert">if set to <c>true</c> [invert].</param>
         public InheritanceConstraint(IType type, bool invert)
         {
             Contract.Requires(type != null);
@@ -55,13 +79,23 @@ namespace ReflectionExtensions
             this.RequiredType = type;
         }
 
+        /// <summary>
+        /// Gets the type that is required to be in the inheritance chain of the generic argument.
+        /// </summary>
         public IType RequiredType
         {
             get;
             private set;
         }
 
-        ///Validation is taken care of by Code Contracts
+        /// <summary>
+        /// Determines if the given type matches this contstraint.
+        /// </summary>
+        /// <param name="type">The type to test against the constraint.</param>
+        /// <returns>
+        /// Returns true if the type matches the constraint, otherwise false.
+        /// </returns>
+        /// Validation is taken care of by Code Contracts
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public bool MatchesConstraint(IType type)
         {
@@ -69,6 +103,13 @@ namespace ReflectionExtensions
             return Invert ? !result : result;
         }
 
+        /// <summary>
+        /// Determines if this <see cref="InheritanceConstraint"/> object equals the given <see cref="IGenericConstraint"/> object.
+        /// </summary>
+        /// <param name="other">The <see cref="IGenericConstraint"/> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
         public bool Equals(IGenericConstraint other)
         {
             if (other is InheritanceConstraint)
@@ -81,6 +122,13 @@ namespace ReflectionExtensions
             }
         }
 
+        /// <summary>
+        /// Determines if this <see cref="InheritanceConstraint" /> object equals the given <see cref="IInheritanceConstraint" /> object.
+        /// </summary>
+        /// <param name="other">The <see cref="IInheritanceConstraint" /> object to compare with this object.</param>
+        /// <returns>
+        /// Returns true if this object object is equal to the other object, otherwise false.
+        /// </returns>
         public bool Equals(IInheritanceConstraint other)
         {
             return other != null &&

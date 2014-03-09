@@ -74,7 +74,7 @@ namespace ReflectionExtensions
         /// <param name="indexes">A list of integers that specify the location of the value to retrieve/set from/to the array. Leave empty to retrieve/set the actual value.</param>
         /// <returns>Returns the value that is stored in this property/field for the given object.</returns>
         /// <exception cref="System.IndexOutOfRangeException">
-        /// Thrown if one of the given indexes is out of range (&lt 0 or &rt .Length) for it's dimention.
+        /// Thrown if one of the given indexes is out of range (&lt; 0 or &gt; .Length) for it's dimention.
         /// Thrown also if trying to access any index other than the first if the member does not store an array.
         /// </exception>
         /// <exception cref="System.InvalidOperationException">Thrown if this property/field cannot read/write when trying to read/write.</exception>
@@ -114,7 +114,7 @@ namespace ReflectionExtensions
         /// <returns>Returns the value stored by the given object in this field.</returns>
         /// <exception cref="System.InvalidOperationException">Thrown if this property/field cannot read the value.</exception>
         /// <exception cref="System.ArgumentException">Thrown if <paramref name="reference"/>'s type does not equal this property/field's enclosing type.</exception>
-        /// <exception cref="Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
+        /// <exception cref="T:Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
         T GetValue<T>(object reference);
 
         /// <summary>
