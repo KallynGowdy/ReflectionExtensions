@@ -61,7 +61,6 @@ namespace ReflectionExtensions.Tests
             string result = generatedType.Invoke<string>("Hi", new GenericType<int, IParameter>(), new object[] { 5, null });
 
             Assert.That(result, Is.EqualTo("{5, }"));
-
         }
 
         [Test]
@@ -100,7 +99,7 @@ namespace ReflectionExtensions.Tests
 
             bool equalsOperatorTest = other == t;
 
-            Assert.That(other, Is.Not.SameAs(t));
+            Assert.That(other, Is.SameAs(t));
         }
 
     }

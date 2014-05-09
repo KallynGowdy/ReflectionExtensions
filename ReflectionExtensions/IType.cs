@@ -15,18 +15,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
     /// <summary>
     /// Defines an interface for an object that describes a type.
     /// </summary>
-    [ContractClass(typeof(ITypeContract))]
     public interface IType : IEquatable<IType>
     {
         /// <summary>
@@ -155,155 +150,6 @@ namespace ReflectionExtensions
         bool IsInterface
         {
             get;
-        }
-    }
-
-    [ContractClassFor(typeof(IType))]
-    internal abstract class ITypeContract : IType
-    {
-        string IType.Name
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-                return default(string);
-            }
-        }
-
-        string IType.FullName
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-                return default(string);
-            }
-        }
-
-        Assembly IType.Assembly
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<Assembly>() != null);
-                return default(Assembly);
-            }
-        }
-
-        bool IType.IsClass
-        {
-            [Pure]
-            get { return default(bool); }
-        }
-
-        bool IType.IsStruct
-        {
-            [Pure]
-            get { return default(bool); }
-        }
-
-        bool IType.IsAbstract
-        {
-            [Pure]
-            get { return default(bool); }
-        }
-
-        IType IType.BaseType
-        {
-            [Pure]
-            get
-            {
-                return default(IType);
-            }
-        }
-
-        IEnumerable<IMember> IType.Members
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IMember>>() != null);
-                return default(IEnumerable<IMember>);
-            }
-        }
-
-        IEnumerable<IField> IType.Fields
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IField>>() != null);
-                return default(IEnumerable<IField>);
-            }
-        }
-
-        IEnumerable<IProperty> IType.Properties
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IProperty>>() != null);
-                return default(IEnumerable<IProperty>);
-            }
-        }
-
-        IEnumerable<IMethod> IType.Methods
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IMethod>>() != null);
-                return default(IEnumerable<IMethod>);
-            }
-        }
-
-        [Pure]
-        bool IType.InheritsFrom(IType baseType)
-        {
-            Contract.Requires<ArgumentNullException>(baseType != null, "baseType");
-            return default(bool);
-        }
-
-        IEnumerable<IStorageMember> IType.StorageMembers
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IStorageMember>>() != null);
-                return default(IEnumerable<IStorageMember>);
-            }
-        }
-
-        IEnumerable<IMethod> IType.Constructors
-        {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IMethod>>() != null);
-                return default(IEnumerable<IMethod>);
-            }
-        }
-
-        [Pure]
-        bool IEquatable<IType>.Equals(IType other)
-        {
-            return default(bool);
-        }
-
-        bool IType.IsInterface
-        {
-            [Pure]
-            get
-            {
-                return default(bool);
-            }
-        }
-
-        public AccessModifier Access
-        {
-            [Pure]
-            get { return default(AccessModifier); }
         }
     }
 }

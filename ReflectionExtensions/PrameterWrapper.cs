@@ -20,9 +20,9 @@ using System.Text;
 
 namespace ReflectionExtensions
 {
-    class ParameterWrapper : IParameter
+    class ParameterWrapper : MemberBase, IParameter
     {
-        public ParameterWrapper(System.Reflection.ParameterInfo parameter)
+        public ParameterWrapper(System.Reflection.ParameterInfo parameter) : base(parameter.Name, parameter.Member.DeclaringType.Wrap(), parameter.ParameterType.Wrap())
         {
             this.WrappedParameter = parameter;
         }
@@ -71,35 +71,7 @@ namespace ReflectionExtensions
             get { return WrappedParameter.DefaultValue; }
         }
 
-        /// <summary>
-        /// Gets the name of the member.
-        /// </summary>
-        public string Name
-        {
-            get { return WrappedParameter.Name; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        public Type ReturnType
-        {
-            get { return WrappedParameter.ParameterType; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        public Type EnclosingType
-        {
-            get { return WrappedParameter.Member.ReflectedType; }
-        }
-
+       
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
         /// </summary>
@@ -152,7 +124,7 @@ namespace ReflectionExtensions
         /// <returns>
         /// Returns true if this object object is equal to the other object, otherwise false.
         /// </returns>
-        public bool Equals(IMember other)
+        public override bool Equals(IMember other)
         {
             if (other is IParameter)
             {

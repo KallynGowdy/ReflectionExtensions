@@ -14,9 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Text;
 
 namespace ReflectionExtensions
 {
@@ -31,7 +29,10 @@ namespace ReflectionExtensions
         /// <param name="parameters">The parameters that are required by the constructor.</param>
         public ConstructorConstraint(params IParameter[] parameters)
         {
-            Contract.Requires(parameters != null);
+            if(parameters == null)
+            {
+                throw new ArgumentNullException("parameters");
+            }
             RequiredParameters = parameters;
         }
 

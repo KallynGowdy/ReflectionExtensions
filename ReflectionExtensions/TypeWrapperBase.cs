@@ -14,11 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
@@ -42,8 +39,10 @@ namespace ReflectionExtensions
         /// <param name="type">The type to augment.</param>
         protected TypeWrapperBase(Type type)
         {
-            Contract.Requires(type != null);
-
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             WrappedType = type;
         }
 

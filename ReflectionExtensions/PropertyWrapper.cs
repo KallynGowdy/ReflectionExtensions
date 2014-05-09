@@ -15,18 +15,14 @@
 
 using Fasterflect;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
     /// <summary>
     /// Defines a wrapper class around System.Reflection.PropertyInfo.
     /// </summary>
-    public class PropertyWrapper : IProperty
+    public class PropertyWrapper : StorageMemberBase, IProperty
     {
         private MemberGetter getter;
 
@@ -46,7 +42,7 @@ namespace ReflectionExtensions
         /// </summary>
         /// <param name="propertyInfo">The System.Reflection.PropertyInfo object to create a wrapper around.</param>
         /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="propertyInfo"/> is null.</exception>
-        public PropertyWrapper(PropertyInfo propertyInfo)
+        public PropertyWrapper(PropertyInfo propertyInfo) : base(propertyInfo)
         {
             if (propertyInfo == null)
             {
@@ -55,58 +51,14 @@ namespace ReflectionExtensions
             this.PropertyInfo = propertyInfo;
             if (CanRead)
             {
-                this.getter = propertyInfo.DelegateForGetPropertyValue();
+                getter = PropertyInfo.DelegateForGetPropertyValue();
             }
             if (CanWrite)
             {
-                this.setter = propertyInfo.DelegateForSetPropertyValue();
+                setter = PropertyInfo.DelegateForSetPropertyValue();
             }
         }
 
-        /// <summary>
-        /// Gets whether the value stored by the member is readable.
-        /// </summary>
-        public bool CanRead
-        {
-            get { return PropertyInfo.CanRead; }
-        }
-
-        /// <summary>
-        /// Gets whether the value stored by the member is overwritable.
-        /// </summary>
-        public bool CanWrite
-        {
-            get { return PropertyInfo.CanWrite; }
-        }
-
-        /// <summary>
-        /// Gets the name of the member.
-        /// </summary>
-        public string Name
-        {
-            get { return PropertyInfo.Name; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        public Type ReturnType
-        {
-            get { return PropertyInfo.PropertyType; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        public Type EnclosingType
-        {
-            get { return PropertyInfo.ReflectedType; }
-        }
 
         /// <summary>
         /// Gets the value stored in this member in the given object.
@@ -117,7 +69,7 @@ namespace ReflectionExtensions
         /// </returns>
         /// <exception cref="System.InvalidOperationException">The value cannot be read from this property.</exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public object GetValue(object reference)
+        public override object GetValue(object reference)
         {
             if (CanRead)
             {
@@ -127,7 +79,6 @@ namespace ReflectionExtensions
             {
                 throw new InvalidOperationException("The value cannot be read from this property.");
             }
-
         }
 
         /// <summary>
@@ -136,7 +87,7 @@ namespace ReflectionExtensions
         /// <param name="reference">A reference to the object to set the value for.</param>
         /// <param name="value">The value to set in this property/field.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public void SetValue(object reference, object value)
+        public override void SetValue(object reference, object value)
         {
             if (CanWrite)
             {
@@ -158,7 +109,7 @@ namespace ReflectionExtensions
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public object this[object reference]
+        public override object this[object reference]
         {
             get
             {
@@ -197,7 +148,7 @@ namespace ReflectionExtensions
         /// </returns>
         /// <exception cref="TypeArgumentException">The returned value could not be cast into the given type.;T</exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
-        public T GetValue<T>(object reference)
+        public override T GetValue<T>(object reference)
         {
             try
             {
@@ -239,7 +190,7 @@ namespace ReflectionExtensions
         /// <returns>
         /// Returns true if this object object is equal to the other object, otherwise false.
         /// </returns>
-        public bool Equals(IMember other)
+        public override bool Equals(IMember other)
         {
             if (other is IProperty)
             {
@@ -279,26 +230,6 @@ namespace ReflectionExtensions
             return Util.HashCode(98981, Name, ReturnType, CanRead, CanWrite, EnclosingType);
         }
 
-        /// <summary>
-        /// Gets whether the Type stored by this member is an array.
-        /// </summary>
-        public bool IsArray
-        {
-            get { return PropertyInfo.PropertyType.IsArray; }
-        }
-
-        /// <summary>
-        /// Gets the number of dimentions of the array that is stored in this object.
-        /// Always returns 1 or higher.
-        /// </summary>
-        /// <remarks>
-        /// Even though not every member is an array, you can treat every member like it stores an array. If it is not an array, the first index returns the
-        /// value stored in this array.
-        /// </remarks>
-        public int ArrayRank
-        {
-            get { return PropertyInfo.PropertyType.GetArrayRank(); }
-        }
 
         /// <summary>
         /// Gets or sets the <see cref="System.Object"/> with the specified reference.
@@ -320,7 +251,7 @@ namespace ReflectionExtensions
         /// or
         /// The Property Cannot Read it's array value and therefore cannot set the value at the given index.
         /// </exception>
-        public object this[object reference, params int[] indexes]
+        public override object this[object reference, params int[] indexes]
         {
             get
             {
@@ -340,13 +271,17 @@ namespace ReflectionExtensions
                     }
                     else
                     {
+                        if(indexes == null)
+                        {
+                            throw new ArgumentNullException("indexes");
+                        }
                         if (indexes.Length == 1 && indexes[0] == 0)
                         {
                             return this[reference];
                         }
                         else
                         {
-                            throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                            throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimension to retrieve a valid value.");
                         }
                     }
                 }
@@ -368,18 +303,22 @@ namespace ReflectionExtensions
                         }
                         else
                         {
-                            throw new NullReferenceException("The array is null. Therfore an index cannot be accessed");
+                            throw new NullReferenceException("The array is null. Therefore an index cannot be accessed");
                         }
                     }
                     else
                     {
+                        if(indexes == null)
+                        {
+                            throw new ArgumentNullException("indexes");
+                        }
                         if (indexes.Length == 1 && indexes[0] == 0)
                         {
                             this[reference] = value;
                         }
                         else
                         {
-                            throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                            throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimension to retrieve a valid value.");
                         }
                     }
                 }

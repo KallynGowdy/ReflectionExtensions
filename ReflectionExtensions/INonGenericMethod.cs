@@ -13,18 +13,12 @@
 //    limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
     /// <summary>
     /// Defines an interface for a method that is not generic.
     /// </summary>
-    [ContractClass(typeof(INonGenericMethodContract))]
     public interface INonGenericMethod : IMethod, IEquatable<INonGenericMethod>
     {
         /// <summary>
@@ -71,98 +65,5 @@ namespace ReflectionExtensions
         /// </returns>
         /// <exception cref="System.ArgumentNullException">Thrown if the given reference object is null.</exception>
         object Invoke(object reference, object arguments);
-
-    }
-
-    [ContractClassFor(typeof(INonGenericMethod))]
-    internal abstract class INonGenericMethodContract : INonGenericMethod
-    {
-
-        T INonGenericMethod.Invoke<T>(object reference, object arguments)
-        {
-            return default(T);
-        }
-
-        T INonGenericMethod.Invoke<T>(object reference, object arguments, T defaultValue)
-        {
-            return default(T);
-        }
-
-        TReturn INonGenericMethod.Invoke<TReturn>(object reference, params object[] arguments)
-        {
-            return default(TReturn);
-        }
-
-        object INonGenericMethod.Invoke(object reference, object arguments)
-        {
-            return default(object);
-        }
-
-        bool IMethod.IsVirtual
-        {
-            get { return default(bool); }
-        }
-
-        bool IMethod.IsAbstract
-        {
-            get { return default(bool); }
-        }
-
-        bool IMethod.IsFinal
-        {
-            get { return default(bool); }
-        }
-
-        IEnumerable<IParameter> IMethod.Parameters
-        {
-            get
-            {
-                return default(IEnumerable<IParameter>);
-            }
-        }
-
-        string IMember.Name
-        {
-            get
-            {
-                return default(string);
-            }
-        }
-
-        Type IMember.ReturnType
-        {
-            get
-            {
-                return default(Type);
-            }
-        }
-
-        Type IMember.EnclosingType
-        {
-            get
-            {
-                return default(Type);
-            }
-        }
-
-        bool IEquatable<IMember>.Equals(IMember other)
-        {
-            return default(bool);
-        }
-
-        AccessModifier IAccessModifiers.Access
-        {
-            get { return default(AccessModifier); }
-        }
-
-        bool IEquatable<IMethod>.Equals(IMethod other)
-        {
-            return default(bool);
-        }
-
-        bool IEquatable<INonGenericMethod>.Equals(INonGenericMethod other)
-        {
-            return default(bool);
-        }
     }
 }

@@ -14,11 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
@@ -36,13 +32,20 @@ namespace ReflectionExtensions
         /// Creates a new GenericTypeWrapper from the given type.
         /// </summary>
         /// <param name="type">The type to wrap.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public GenericTypeWrapper(Type type) : base(type)
         {
-            Contract.Requires(type != null);
-            Contract.Requires(type.IsGenericType);
-            Contract.Requires(type.ContainsGenericParameters);
-            Contract.Ensures(WrappedType != null);
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+            if (!type.IsGenericType)
+            {
+                throw new ArgumentException("The given type must be a generic type.", "type");
+            }
+            if (!type.ContainsGenericParameters)
+            {
+                throw new ArgumentException("The given type must contain generic unfilled parameters.", "type");
+            }
         }
 
         /// <summary>
@@ -60,7 +63,10 @@ namespace ReflectionExtensions
         /// <returns></returns>
         private static string getKey(Type[] types)
         {
-            Contract.Requires(types != null);
+            if(types == null)
+            {
+                throw new ArgumentNullException("types");
+            }
             return string.Join<Type>(", ", types);
         }
 

@@ -14,12 +14,7 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
@@ -34,7 +29,10 @@ namespace ReflectionExtensions
         /// <param name="representedType">The type to augment.</param>
         public NonGenericTypeWrapper(Type representedType) : base(representedType)
         {
-            Contract.Requires(representedType != null);
+            if (representedType == null)
+            {
+                throw new ArgumentNullException("representedType");
+            }
         }
 
         /// <summary>
@@ -51,7 +49,7 @@ namespace ReflectionExtensions
         public TReturn Invoke<TReturn>(string name, object reference, params object[] arguments)
         {
 
-            INonGenericMethod method = Methods.WithName(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => (a == null && !p.ReturnType.IsValueType) || p.ReturnType.IsAssignableFrom(a.GetType())));
+            INonGenericMethod method = Methods.WithName(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => (a == null && !p.ReturnType.IsStruct) || a.GetType().Wrap().InheritsFrom(p.ReturnType)));
             if (method == null)
             {
                 throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));
@@ -92,7 +90,7 @@ namespace ReflectionExtensions
         /// <exception cref="System.ArgumentNullException">Thrown if the given name or reference is null.</exception>
         public TReturn Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
         {
-            INonGenericMethod method = Methods.WithName(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => p.ReturnType.IsAssignableFrom(a.GetType())));
+            INonGenericMethod method = Methods.WithName(name).OfType<INonGenericMethod>().SingleOrDefault(m => m.Parameters.SequenceEqual(arguments, (p, a) => a.GetType().Wrap().InheritsFrom(p.ReturnType)));
             if (method == null)
             {
                 throw new MissingMethodException(string.Format("The method, {0}, could not be found with the signature {0}({1})", name, string.Join(", ", arguments.Select(a => a.GetType().Name).ToArray())));

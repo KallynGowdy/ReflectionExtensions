@@ -15,12 +15,8 @@
 using Fasterflect;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace ReflectionExtensions
@@ -28,7 +24,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines a class for an object that wraps a generic MethodBase object.
     /// </summary>
-    public class GenericMethodWrapper : IGenericMethod
+    public class GenericMethodWrapper : MemberBase, IGenericMethod
     {
         /// <summary>
         /// A dictionary of strings that were generated from the given type arguments to generate the related method.
@@ -51,10 +47,16 @@ namespace ReflectionExtensions
         /// <exception cref="System.ArgumentNullException">Thrown if the given method is null.</exception>
         /// <exception cref="System.ArgumentException">Throw if the given method is not generic.</exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public GenericMethodWrapper(MethodInfo method)
+        public GenericMethodWrapper(MethodInfo method) : base(method, method.ReturnType.Wrap())
         {
-            Contract.Requires(method != null, "method");
-            Contract.Requires(method.IsGenericMethod, "method");
+            if (method == null)
+            {
+                throw new ArgumentNullException("method");
+            }
+            if (!method.IsGenericMethod)
+            {
+                throw new ArgumentException("The given method must be generic.", "method");
+            }
             this.WrappedMethod = method;
         }
 
@@ -101,7 +103,7 @@ namespace ReflectionExtensions
         {
             //Lookup the method in the dictionary
             MethodInvoker method;
-            if (generatedMethods.TryGetValue(getKey(genericArguments), out method))
+            if (generatedMethods.TryGetValue(GetKey(genericArguments), out method))
             {
                 try
                 {
@@ -141,7 +143,7 @@ namespace ReflectionExtensions
                 //otherwise generate the method from scratch.
                 method = this.WrappedMethod.MakeGenericMethod(genericArguments).DelegateForCallMethod();
 
-                generatedMethods.Add(getKey(genericArguments), method);
+                generatedMethods.Add(GetKey(genericArguments), method);
                 
                 try
                 {
@@ -170,8 +172,10 @@ namespace ReflectionExtensions
         /// <returns>Returns a string that loosely represents the constraints on the given type parameter.</returns>
         private static string getTypeParameterConstraints(IGenericParameter parameter)
         {
-            Contract.Requires(parameter != null);
-            Contract.Ensures(Contract.Result<string>() != null);
+            if (parameter == null)
+            {
+                throw new ArgumentNullException("parameter");
+            }
 
             StringBuilder builder = new StringBuilder();
 
@@ -203,9 +207,12 @@ namespace ReflectionExtensions
         /// </summary>
         /// <param name="types">The types to get the key for.</param>
         /// <returns>Returns a key that represents the values to store in the dictionary.</returns>
-        private static string getKey(Type[] types)
+        private static string GetKey(Type[] types)
         {
-            Contract.Requires(types != null);
+            if (types == null)
+            {
+                throw new ArgumentNullException("types");
+            }
             StringBuilder builder = new StringBuilder();
 
             foreach (Type t in types)
@@ -249,45 +256,13 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets the name of the member.
-        /// </summary>
-        public string Name
-        {
-            get { return WrappedMethod.Name; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        public Type ReturnType
-        {
-            get
-            {
-                return WrappedMethod.ReturnType;
-            }
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        public Type EnclosingType
-        {
-            get { return WrappedMethod.DeclaringType; }
-        }
-
-        /// <summary>
         /// Determines if this <see cref="GenericMethodWrapper"/> object equals the given <see cref="IMember"/> object.
         /// </summary>
         /// <param name="other">The <see cref="IMember"/> object to compare with this object.</param>
         /// <returns>
         /// Returns true if this object object is equal to the other object, otherwise false.
         /// </returns>
-        public bool Equals(IMember other)
+        public override bool Equals(IMember other)
         {
             if (other is IGenericMethod)
             {
@@ -299,7 +274,7 @@ namespace ReflectionExtensions
             }
             else
             {
-                return base.Equals(other);
+                return false;
             }
         }
 
@@ -326,7 +301,7 @@ namespace ReflectionExtensions
             }
             else
             {
-                return base.Equals(other);
+                return false;
             }
         }
 
@@ -396,7 +371,7 @@ namespace ReflectionExtensions
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0} {1} {2}<{3}>(4)", this.Access, this.ReturnType, this.Name, string.Join(", ", this.GenericParameters), string.Join(", ", this.Parameters));
+            return string.Format("{0} {1} {2}<{3}>({4})", this.Access, this.ReturnType, this.Name, string.Join(", ", this.GenericParameters), string.Join(", ", this.Parameters));
         }
     }
 }

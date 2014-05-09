@@ -66,3 +66,6 @@ packages/
 
 #Test files
 *.testsettings
+
+*.sln.ide
+*.sln.ide/

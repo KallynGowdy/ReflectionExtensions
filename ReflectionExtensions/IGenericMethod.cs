@@ -14,10 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
@@ -34,7 +30,6 @@ namespace ReflectionExtensions
     /// </para>
     /// Implementations of this interface are recommended to cache the generated methods so that they can be reused.
     /// </remarks>
-    [ContractClass(typeof(IGenericMethodContract))]
     public interface IGenericMethod : IMethod, IEquatable<IGenericMethod>
     {
         /// <summary>
@@ -71,104 +66,5 @@ namespace ReflectionExtensions
         /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
         /// <returns>Returns the value returned from the method cast into the given type. Returns default(<typeparamref name="TReturn"/>) value if the return type is void or null.</returns>
         TReturn Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments, TReturn defaultValue);
-    }
-
-    [ContractClassFor(typeof(IGenericMethod))]
-    internal abstract class IGenericMethodContract : IGenericMethod
-    {
-
-        IEnumerable<IGenericParameter> IGenericMethod.GenericParameters
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<IGenericParameter>>() != null);
-                return default(IEnumerable<IGenericParameter>);
-            }
-        }
-
-        [Pure]
-        TReturn IGenericMethod.Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments)
-        {
-            Contract.Requires(reference != null, "The given object reference must not be null");
-            Contract.Requires(genericArguments != null);
-            Contract.EnsuresOnThrow<TypeArgumentException>(!((IGenericMethod)this).EnclosingType.IsAssignableFrom(reference.GetType()));
-            return default(TReturn);
-        }
-
-        [Pure]
-        TReturn IGenericMethod.Invoke<TReturn>(object reference, Type[] genericArguments, object[] arguments, TReturn defaultValue)
-        {
-            Contract.Requires(reference != null);
-            Contract.Requires(genericArguments != null);
-            Contract.EnsuresOnThrow<TypeArgumentException>(!((IGenericMethod)this).EnclosingType.IsAssignableFrom(reference.GetType()));
-            return default(TReturn);
-        }
-
-        bool IMethod.IsVirtual
-        {
-            get { return default(bool); }
-        }
-
-        bool IMethod.IsAbstract
-        {
-            get { return default(bool); }
-        }
-
-        bool IMethod.IsFinal
-        {
-            get { return default(bool); }
-        }
-
-        IEnumerable<IParameter> IMethod.Parameters
-        {
-            get
-            {
-                return default(IEnumerable<IParameter>);
-            }
-        }
-
-        string IMember.Name
-        {
-            get
-            {
-                return default(string);
-            }
-        }
-
-        Type IMember.ReturnType
-        {
-            get
-            {
-                return default(Type);
-            }
-        }
-
-        Type IMember.EnclosingType
-        {
-            get
-            {
-                return default(Type);
-            }
-        }
-
-        bool IEquatable<IMember>.Equals(IMember other)
-        {
-            return default(bool);
-        }
-
-        AccessModifier IAccessModifiers.Access
-        {
-            get { return default(AccessModifier); }
-        }
-
-        bool IEquatable<IMethod>.Equals(IMethod other)
-        {
-            return default(bool);
-        }
-
-        bool IEquatable<IGenericMethod>.Equals(IGenericMethod other)
-        {
-            return default(bool);
-        }        
     }
 }

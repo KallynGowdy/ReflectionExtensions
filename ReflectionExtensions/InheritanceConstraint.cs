@@ -13,10 +13,6 @@
 //    limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
 
 namespace ReflectionExtensions
 {
@@ -41,7 +37,10 @@ namespace ReflectionExtensions
         /// <param name="type">The type to require inheritance from.</param>
         public InheritanceConstraint(Type type)
         {
-            Contract.Requires(type != null, "type");
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             this.RequiredType = type.Wrap();
         }
 
@@ -52,7 +51,10 @@ namespace ReflectionExtensions
         /// <param name="invert">if set to <c>true</c> [invert].</param>
         public InheritanceConstraint(Type type, bool invert)
         {
-            Contract.Requires(type != null);
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             this.RequiredType = type.Wrap();
             this.Invert = invert;
         }
@@ -64,7 +66,10 @@ namespace ReflectionExtensions
         /// <param name="invert">if set to <c>true</c> [invert].</param>
         public InheritanceConstraint(IType type, bool invert)
         {
-            Contract.Requires(type != null);
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             this.RequiredType = type;
             this.Invert = invert;
         }
@@ -75,7 +80,10 @@ namespace ReflectionExtensions
         /// <param name="type">The type to require inheritance from.</param>
         public InheritanceConstraint(IType type)
         {
-            Contract.Requires(type != null, "type");
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             this.RequiredType = type;
         }
 
@@ -96,9 +104,12 @@ namespace ReflectionExtensions
         /// Returns true if the type matches the constraint, otherwise false.
         /// </returns>
         /// Validation is taken care of by Code Contracts
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public bool MatchesConstraint(IType type)
         {
+            if(type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             bool result = type.InheritsFrom(RequiredType);
             return Invert ? !result : result;
         }

@@ -17,8 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
@@ -42,8 +40,14 @@ namespace ReflectionExtensions
         /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
         public static object Invoke(this IGenericMethod method, object reference, object arguments)
         {
-            Contract.Requires(method != null);
-            Contract.Requires(reference != null);
+            if (method == null)
+            {
+                throw new ArgumentNullException("method");
+            }
+            if (reference == null)
+            {
+                throw new ArgumentNullException("reference");
+            }
 
             return method.Invoke<object>(reference, arguments);
         }
@@ -61,11 +65,16 @@ namespace ReflectionExtensions
         /// <exception cref="T:Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
         /// <exception cref="System.ArgumentNullException">Thrown if the given reference is null.</exception>
         /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public static TReturn Invoke<TReturn>(this IGenericMethod method, object reference, object arguments)
         {
-            Contract.Requires(method != null);
-            Contract.Requires(reference != null);
+            if (method == null)
+            {
+                throw new ArgumentNullException("method");
+            }
+            if (reference == null)
+            {
+                throw new ArgumentNullException("reference");
+            }
 
             if (arguments == null)
             {
@@ -76,7 +85,7 @@ namespace ReflectionExtensions
                 //Match up each argument to a parameter
                 IType argumentsType = arguments.GetType().Wrap();
 
-                var argsAndParams = argumentsType.StorageMembers.Where(a => a.CanRead).GroupJoin(method.Parameters, a => a.Name, p => p.Name, (a, p) => new {Argument=a[arguments], Parameter = p.First()}).OrderBy(ap => ap.Parameter.Position);
+                var argsAndParams = argumentsType.StorageMembers.Where(a => a.CanRead).GroupJoin(method.Parameters, a => a.Name, p => p.Name, (a, p) => new { Argument = a[arguments], Parameter = p.First() }).OrderBy(ap => ap.Parameter.Position);
 
                 return method.Invoke<TReturn>(reference, argsAndParams.Select(a => a.Argument).ToArray(), default(TReturn));
             }
@@ -96,9 +105,18 @@ namespace ReflectionExtensions
         /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
         public static object Invoke(this IGenericMethod method, object reference, object[] arguments)
         {
-            Contract.Requires(method != null);
-            Contract.Requires(reference != null);
-            Contract.Requires(arguments != null);
+            if (method == null)
+            {
+                throw new ArgumentNullException("method");
+            }
+            if (reference == null)
+            {
+                throw new ArgumentNullException("reference");
+            }
+            if (arguments == null)
+            {
+                throw new ArgumentNullException("arguments");
+            }
             return method.Invoke<object>(reference, arguments, null);
         }
 
@@ -116,21 +134,32 @@ namespace ReflectionExtensions
         /// <exception cref="System.ArgumentNullException">Thrown if the given reference is null.</exception>
         /// <exception cref="T:Extensions.TypeArgumentException">Thrown if the returned value cannot be cast into the given type.</exception>
         /// <exception cref="System.ArgumentException">Thrown if one of the given generic arguments does not match a contstraint.</exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "2")]
         public static TReturn Invoke<TReturn>(this IGenericMethod method, object reference, object[] arguments, TReturn defaultValue)
         {
-            Contract.Requires(method != null);
-            Contract.Requires(reference != null);
-            Contract.Requires(arguments != null);
-            Contract.Requires(arguments.Length >= method.GenericParameters.Count());
-            
+            if (method == null)
+            {
+                throw new ArgumentNullException("method");
+            }
+            if (reference == null)
+            {
+                throw new ArgumentNullException("reference");
+            }
+            if (arguments == null)
+            {
+                throw new ArgumentNullException("arguments");
+            }
+            if (arguments.Length < method.GenericParameters.Count())
+            {
+                throw new ArgumentException("The given number of generic arguments must be greater than or equal to the number of generic arguments required.", "arguments");
+            }
+
             Dictionary<IGenericParameter, Type> genericArgsNamesToTypes = new Dictionary<IGenericParameter, Type>();
 
             var paramsAndArgs = method.Parameters.Zip(arguments, (p, a) => new { Parameter = p, Argument = a });
 
             foreach (var paramArg in paramsAndArgs)
             {
-                if (paramArg.Argument == null && paramArg.Parameter.ReturnType.IsValueType)
+                if (paramArg.Argument == null && paramArg.Parameter.ReturnType.IsStruct)
                 {
                     throw new ArgumentNullException(paramArg.Parameter.Name);
                 }
@@ -153,33 +182,51 @@ namespace ReflectionExtensions
         /// Wraps the given type in a new ReflectionExtensions.IType object that provides useful functionality.
         /// </summary>
         /// <param name="type">The type to wrap.</param>
-        /// <returns>Returns a new ReflectionExtensions.IType object.</returns>
+        /// <returns>Returns a <see cref="ReflectionExtensions.IType"/> object. This object is created if the current type has not been wrapped before, otherwise it is retrieved from the cache.</returns>
         [Pure]
         public static IType Wrap(this Type type)
         {
+            IType t;
             if (type == null)
             {
                 return null;
             }
+            else if (ReflectedCache.Types.TryGetValue(type, out t))
+            {
+                return t;
+            }
             else if (type.IsGenericType && type.ContainsGenericParameters)
             {
-                return new GenericTypeWrapper(type);
+                t = new GenericTypeWrapper(type);
             }
             else
             {
-                return new NonGenericTypeWrapper(type);
+                t = new NonGenericTypeWrapper(type);
             }
+            ReflectedCache.Types.TryAdd(type, t);
+            return t;
         }
 
         /// <summary>
         /// Wraps the given System.Reflection.PropertyInfo object into a new ReflectionExtensions.IProperty object.
         /// </summary>
         /// <param name="property">The property to wrap.</param>
-        /// <returns>Returns a new ReflectionExtensions.IProperty object.</returns>
+        /// <returns>Returns a ReflectionExtensions.IProperty object. This object is retrieved from the cache if it has been wrapped before, otherwise it is a new IProperty object.</returns>
         [Pure]
         public static IProperty Wrap(this PropertyInfo property)
         {
-            return new PropertyWrapper(property);
+            if (property == null)
+            {
+                throw new ArgumentNullException("property");
+            }
+            IProperty prop;
+            if (ReflectedCache.Properties.TryGetValue(property, out prop))
+            {
+                return prop;
+            }
+            prop = new PropertyWrapper(property);
+            ReflectedCache.Properties.TryAdd(property, prop);
+            return prop;
         }
 
         /// <summary>
@@ -187,19 +234,29 @@ namespace ReflectionExtensions
         /// </summary>
         /// <param name="method">The method to wrap.</param>
         /// <returns>Returns a new ReflectionExtensions.IMethod object.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         [Pure]
         public static IMethod Wrap(this MethodBase method)
         {
-            Contract.Requires(method != null, "method");
-            if (method.IsGenericMethod && method is MethodInfo)
+            if (method == null)
             {
-                return new GenericMethodWrapper((MethodInfo)method);
+                throw new ArgumentNullException("method");
+            }
+
+            IMethod m;
+            if (ReflectedCache.Methods.TryGetValue(method, out m))
+            {
+                return m;
+            }
+            else if (method.IsGenericMethod && method is MethodInfo)
+            {
+                m = new GenericMethodWrapper((MethodInfo)method);
             }
             else
             {
-                return new NonGenericMethodWrapper(method);
+                m = new NonGenericMethodWrapper(method);
             }
+            ReflectedCache.Methods.TryAdd(method, m);
+            return m;
         }
 
         /// <summary>
@@ -210,7 +267,14 @@ namespace ReflectionExtensions
         [Pure]
         public static IField Wrap(this FieldInfo field)
         {
-            return new FieldWrapper(field);
+            IField f;
+            if (ReflectedCache.Fields.TryGetValue(field, out f))
+            {
+                return f;
+            }
+            f = new FieldWrapper(field);
+            ReflectedCache.Fields.TryAdd(field, f);
+            return f;
         }
 
         /// <summary>
@@ -221,7 +285,14 @@ namespace ReflectionExtensions
         [Pure]
         public static IParameter Wrap(this ParameterInfo parameter)
         {
-            return new ParameterWrapper(parameter);
+            IParameter p;
+            if (ReflectedCache.Parameters.TryGetValue(parameter, out p))
+            {
+                return p;
+            }
+            p = new ParameterWrapper(parameter);
+            ReflectedCache.Parameters.TryAdd(parameter, p);
+            return p;
         }
 
         /// <summary>
@@ -257,9 +328,14 @@ namespace ReflectionExtensions
         [Pure]
         public static IEnumerable<IMethod> WithName(this IEnumerable<IMethod> methods, string name)
         {
-            Contract.Requires(methods != null);
-            Contract.Requires(name != null);
-
+            if (methods == null)
+            {
+                throw new ArgumentNullException("methods");
+            }
+            if (name == null)
+            {
+                throw new ArgumentNullException("name");
+            }
             var enumerator = methods.GetEnumerator();
             while (enumerator.MoveNext())
             {
@@ -279,13 +355,19 @@ namespace ReflectionExtensions
         [Pure]
         public static IEnumerable<IMethod> WithParameters(this IEnumerable<IMethod> methods, params Type[] parameterTypes)
         {
-            Contract.Requires(methods != null);
-            Contract.Requires(parameterTypes != null);
+            if (methods == null)
+            {
+                throw new ArgumentNullException("methods");
+            }
+            if (parameterTypes == null)
+            {
+                throw new ArgumentNullException("parameterTypes");
+            }
 
             var enumerator = methods.GetEnumerator();
             while (enumerator.MoveNext())
             {
-                if (enumerator.Current != null && enumerator.Current.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)))
+                if (enumerator.Current != null && enumerator.Current.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t.Wrap())))
                 {
                     yield return enumerator.Current;
                 }
@@ -302,10 +384,16 @@ namespace ReflectionExtensions
         [Pure]
         public static IMethod WithSignature(this IEnumerable<IMethod> methods, string name, params Type[] parameterTypes)
         {
-            Contract.Requires(methods != null, "type");
-            Contract.Requires(name != null, "name");
+            if (methods == null)
+            {
+                throw new ArgumentNullException("methods");
+            }
+            if (name == null)
+            {
+                throw new ArgumentNullException("name");
+            }
 
-            return methods.Where(m => m.Name.Equals(name)).SingleOrDefault(m => m.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t)));
+            return methods.Where(m => m.Name.Equals(name)).SingleOrDefault(m => m.Parameters.SequenceEqual(parameterTypes, (p, t) => p.ReturnType.Equals(t.Wrap())));
         }
     }
 }

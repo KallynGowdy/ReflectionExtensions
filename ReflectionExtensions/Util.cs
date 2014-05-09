@@ -17,8 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
@@ -39,9 +37,18 @@ namespace ReflectionExtensions
         [Pure]
         internal static IEnumerable<TFirst> WhereSequence<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> filter)
         {
-            Contract.Requires(first != null, "first");
-            Contract.Requires(second != null, "second");
-            Contract.Requires(filter != null, "filter");
+            if (first == null)
+            {
+                throw new ArgumentNullException("first");
+            }
+            if (second == null)
+            {
+                throw new ArgumentNullException("second");
+            }
+            if (filter == null)
+            {
+                throw new ArgumentNullException("filter");
+            }
 
             IEnumerator<TFirst> fEnumerator = first.GetEnumerator();
             IEnumerator<TSecond> sEnumerator = second.GetEnumerator();
@@ -68,9 +75,18 @@ namespace ReflectionExtensions
         [Pure]
         internal static bool SequenceEqual<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> comparer)
         {
-            Contract.Requires(first != null, "first");
-            Contract.Requires(second != null, "second");
-            Contract.Requires(comparer != null, "comparer");
+            if (first == null)
+            {
+                throw new ArgumentNullException("first");
+            }
+            if (second == null)
+            {
+                throw new ArgumentNullException("second");
+            }
+            if (comparer == null)
+            {
+                throw new ArgumentNullException("comparer");
+            }
 
             IEnumerator<TFirst> fEnumerator = first.GetEnumerator();
             IEnumerator<TSecond> sEnumerator = second.GetEnumerator();
@@ -100,7 +116,10 @@ namespace ReflectionExtensions
         [Pure]
         internal static int HashCode(int primeNumber, params object[] values)
         {
-            Contract.Requires(values != null, "values");
+            if (values == null)
+            {
+                throw new ArgumentNullException("values");
+            }
             unchecked
             {
                 int hash = primeNumber;
@@ -108,7 +127,7 @@ namespace ReflectionExtensions
                 foreach (object val in values)
                 {
                     if (val != null)
-                        hash = hash * 23 + val.GetHashCode();
+                        hash = hash * primeNumber + val.GetHashCode();
                 }
 
                 return hash;
@@ -123,7 +142,10 @@ namespace ReflectionExtensions
         [Pure]
         internal static AccessModifier GetAccessModifiers(this MethodBase member)
         {
-            Contract.Requires<ArgumentNullException>(member != null, "member");
+            if (member == null)
+            {
+                throw new ArgumentNullException("member");
+            }
             if (member.IsPublic)
             {
                 return AccessModifier.Public;
@@ -158,7 +180,10 @@ namespace ReflectionExtensions
         [Pure]
         internal static AccessModifier GetAccessModifiers(this Type type)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "member");
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             if (type.IsNested)
             {
                 if (type.IsNestedPublic)

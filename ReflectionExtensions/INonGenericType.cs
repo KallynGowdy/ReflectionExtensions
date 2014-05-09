@@ -13,18 +13,13 @@
 //    limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+
 
 namespace ReflectionExtensions
 {
     /// <summary>
     /// Defines an interface for a type for which all of the type parameters have been resolved.
     /// </summary>
-    [ContractClass(typeof(INonGenericTypeContract))]
     public interface INonGenericType : IType, IEquatable<INonGenericType>
     {
         /// <summary>
@@ -70,123 +65,5 @@ namespace ReflectionExtensions
         /// <param name="arguments">A list of objects that should be used as arguments for the invocation.</param>
         /// <returns>Returns the result of the method call.</returns>
         object Invoke(string name, object reference, params object[] arguments);
-    }
-
-    [ContractClassFor(typeof(INonGenericType))]
-    internal abstract class INonGenericTypeContract : INonGenericType
-    {
-
-        TReturn INonGenericType.Invoke<TReturn>(string name, object reference, params object[] arguments)
-        {
-            Contract.Requires(name != null);
-            Contract.Requires(reference != null);
-            return default(TReturn);
-        }
-
-        TReturn INonGenericType.Invoke<TReturn>(string name, object reference, Type[] genericArguments, object[] arguments)
-        {
-            Contract.Requires(name != null);
-            Contract.Requires(reference != null );
-            return default(TReturn);
-        }
-
-        object INonGenericType.Invoke(string name, object reference, params object[] arguments)
-        {
-            Contract.Requires(name != null);
-            Contract.Requires(reference != null);
-            return default(object);
-        }
-
-        string IType.Name
-        {
-            get { return default(string); }
-        }
-
-        string IType.FullName
-        {
-            get { return default(string); }
-        }
-
-        System.Reflection.Assembly IType.Assembly
-        {
-            get { return default(Assembly); }
-        }
-
-        bool IType.IsClass
-        {
-            get { return default(bool); }
-        }
-
-        bool IType.IsStruct
-        {
-            get { return default(bool); }
-        }
-
-        bool IType.IsAbstract
-        {
-            get { return default(bool); }
-        }
-
-        IType IType.BaseType
-        {
-            get { return default(IType); }
-        }
-
-        
-
-        IEnumerable<IMember> IType.Members
-        {
-            get { return default(IEnumerable<IMember>); }
-        }
-
-        IEnumerable<IField> IType.Fields
-        {
-            get { return default(IEnumerable<IField>); }
-        }
-
-        IEnumerable<IProperty> IType.Properties
-        {
-            get { return default(IEnumerable<IProperty>); }
-        }
-
-        IEnumerable<IMethod> IType.Methods
-        {
-            get { return default(IEnumerable<IMethod>); }
-        }
-
-        bool IType.InheritsFrom(IType baseType)
-        {
-            return default(bool); 
-        }
-
-        IEnumerable<IStorageMember> IType.StorageMembers
-        {
-            get { return default(IEnumerable<IStorageMember>); }
-        }
-
-        IEnumerable<IMethod> IType.Constructors
-        {
-            get { return default(IEnumerable<IMethod>); }
-        }
-
-        bool IType.IsInterface
-        {
-            get { return default(bool); }
-        }
-
-        bool IEquatable<IType>.Equals(IType other)
-        {
-            return default(bool); 
-        }
-
-        bool IEquatable<INonGenericType>.Equals(INonGenericType other)
-        {
-            return default(bool);
-        }
-
-        public AccessModifier Access
-        {
-            get { return default(AccessModifier); }
-        }
     }
 }

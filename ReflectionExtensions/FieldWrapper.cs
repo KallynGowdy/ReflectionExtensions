@@ -14,9 +14,6 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Reflection;
 using Fasterflect;
 
@@ -25,7 +22,7 @@ namespace ReflectionExtensions
     /// <summary>
     /// Defines a class that provides a wrapper for a FieldInfo object that implements <see cref="ReflectionExtensions.IField"/>.
     /// </summary>
-    public class FieldWrapper : IField
+    public class FieldWrapper : StorageMemberBase, IField
     {
         private readonly MemberGetter getter;
         private readonly MemberSetter setter;
@@ -44,13 +41,12 @@ namespace ReflectionExtensions
         /// </summary>
         /// <param name="field">The field to wrap.</param>
         /// <exception cref="System.ArgumentNullException">Throw if the given field is null.</exception>
-        public FieldWrapper(FieldInfo field)
+        public FieldWrapper(FieldInfo field) : base(field)
         {
             if (field == null)
             {
                 throw new ArgumentNullException("field");
             }
-
             this.WrappedField = field;
             this.getter = WrappedField.DelegateForGetFieldValue();
             this.setter = WrappedField.DelegateForSetFieldValue();
@@ -65,27 +61,11 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets whether the value stored by the member is readable.
-        /// </summary>
-        public bool CanRead
-        {
-            get { return true; }
-        }
-
-        /// <summary>
-        /// Gets whether the value stored by the member is overwritable.
-        /// </summary>
-        public bool CanWrite
-        {
-            get { return true; }
-        }
-
-        /// <summary>
         /// Gets or sets the value stored in this field in the given object.
         /// </summary>
         /// <param name="reference">The object reference from which the value should be retrieved or set.</param>
         /// <returns>Returns the value referenced by this field that was stored in the given reference.</returns>
-        public object this[object reference]
+        public override object this[object reference]
         {
             get
             {
@@ -94,22 +74,6 @@ namespace ReflectionExtensions
             set
             {
                 setter(reference, value);
-            }
-        }
-
-        /// <summary>
-        /// Gets the number of dimentions of the array that is stored in this object.
-        /// Always returns 1 or higher.
-        /// </summary>
-        /// <remarks>
-        /// Even though not every member is an array, you can treat every member like it stores an array. If it is not an array, the first index returns the
-        /// value stored in this array.
-        /// </remarks>
-        public int ArrayRank
-        {
-            get
-            {
-                return WrappedField.FieldType.GetArrayRank();
             }
         }
 
@@ -128,7 +92,7 @@ namespace ReflectionExtensions
         /// <exception cref="System.IndexOutOfRangeException">
         /// The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.
         /// </exception>
-        public object this[object reference, params int[] indexes]
+        public override object this[object reference, params int[] indexes]
         {
             get
             {
@@ -141,18 +105,22 @@ namespace ReflectionExtensions
                     }
                     else
                     {
-                        throw new NullReferenceException("The Array is null. Therfore an index cannot be accessed.");
+                        throw new NullReferenceException("The Array is null. Therefore an index cannot be accessed.");
                     }
                 }
                 else
                 {
+                    if(indexes == null)
+                    {
+                        throw new ArgumentNullException("indexes");
+                    }
                     if (indexes.Length == 1 && indexes[0] == 0)
                     {
                         return this[reference];
                     }
                     else
                     {
-                        throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                        throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimension to retrieve a valid value.");
                     }
                 }
             }
@@ -172,13 +140,17 @@ namespace ReflectionExtensions
                 }
                 else
                 {
+                    if(indexes == null)
+                    {
+                        throw new ArgumentNullException("indexes");
+                    }
                     if (indexes.Length == 1 && indexes[0] == 0)
                     {
                         this[reference] = value;
                     }
                     else
                     {
-                        throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimention to retrieve a valid value.");
+                        throw new IndexOutOfRangeException("The value store in this object is not an array. Therefore the given index(es) need to refer to the first element in the first dimension to retrieve a valid value.");
                     }
                 }
             }
@@ -192,31 +164,9 @@ namespace ReflectionExtensions
         /// Returns the value stored by the given object in this field.
         /// </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public object GetValue(object reference)
+        public override object GetValue(object reference)
         {
             return this[reference];
-        }
-
-        /// <summary>
-        /// Gets the value stored in this member in the given object.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="reference">A reference to the object to retreive the value from.</param>
-        /// <returns>
-        /// Returns the value stored by the given object in this field.
-        /// </returns>
-        /// <exception cref="TypeArgumentException">The returned value cannot be cast into the given type.;T</exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly")]
-        public T GetValue<T>(object reference)
-        {
-            try
-            {
-                return (T)GetValue(reference);
-            }
-            catch (InvalidCastException e)
-            {
-                throw new TypeArgumentException("The returned value cannot be cast into the given type.", "T", e);
-            }
         }
 
         /// <summary>
@@ -225,7 +175,7 @@ namespace ReflectionExtensions
         /// <param name="reference">A reference to the object to set the value for.</param>
         /// <param name="value">The value to set in this property/field.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public void SetValue(object reference, object value)
+        public override void SetValue(object reference, object value)
         {
             this[reference] = value;
         }
@@ -264,35 +214,6 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets the name of the member.
-        /// </summary>
-        public string Name
-        {
-            get { return WrappedField.Name; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        public Type ReturnType
-        {
-            get { return WrappedField.FieldType; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        public Type EnclosingType
-        {
-            get { return WrappedField.ReflectedType; }
-        }
-
-        /// <summary>
         /// Determines if this <see cref="FieldWrapper"/> object equals the given <see cref="Object"/> object.
         /// </summary>
         /// <param name="obj">The <see cref="Object"/> object to compare with this object.</param>
@@ -322,7 +243,7 @@ namespace ReflectionExtensions
         /// <returns>
         /// Returns true if this object object is equal to the other object, otherwise false.
         /// </returns>
-        public bool Equals(IMember other)
+        public override bool Equals(IMember other)
         {
             if (other is IField)
             {
@@ -372,14 +293,6 @@ namespace ReflectionExtensions
         public override string ToString()
         {
             return Name;
-        }
-
-        /// <summary>
-        /// Gets whether the Type stored by this member is an array.
-        /// </summary>
-        public bool IsArray
-        {
-            get { return WrappedField.FieldType.IsArray; }
         }
     }
 }

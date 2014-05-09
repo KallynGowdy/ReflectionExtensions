@@ -16,10 +16,8 @@
 using Fasterflect;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace ReflectionExtensions
 {
@@ -31,7 +29,7 @@ namespace ReflectionExtensions
     /// This class just doesn't provide support for generic methods. Besides, some MethodBase objects can be generic but not accept generic arguments,
     /// such as a constructor.
     /// </remarks>
-    public class NonGenericMethodWrapper : INonGenericMethod
+    public class NonGenericMethodWrapper : MemberBase, INonGenericMethod
     {
         MethodInvoker invoker;
         ConstructorInvoker ctor;
@@ -41,10 +39,13 @@ namespace ReflectionExtensions
         /// </summary>
         /// <exception cref="System.ArgumentNullException">Thrown if the given method is null.</exception>
         /// <param name="method">The method to augment. Must be non generic.</param>
-        public NonGenericMethodWrapper(MethodBase method)
+        public NonGenericMethodWrapper(MethodBase method) : base(method, (method is MethodInfo ? ((MethodInfo)method).ReturnType : method.DeclaringType).Wrap())
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if(method == null)
+            {
+                throw new ArgumentNullException("method");
+            }
+            
             this.WrappedMethod = method;
             if (method is ConstructorInfo)
             {
@@ -100,50 +101,6 @@ namespace ReflectionExtensions
                 return WrappedMethod.GetAccessModifiers();
             }
         }
-
-        /// <summary>
-        /// Gets the name of the member.
-        /// </summary>
-        public string Name
-        {
-            get { return WrappedMethod.Name; }
-        }
-
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        public Type ReturnType
-        {
-            get
-            {
-                if (WrappedMethod is MethodInfo)
-                {
-                    return ((MethodInfo)WrappedMethod).ReturnType;
-                }
-                else if (WrappedMethod is ConstructorInfo)
-                {
-                    return WrappedMethod.DeclaringType;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        public Type EnclosingType
-        {
-            get { return WrappedMethod.DeclaringType; }
-        }
-
 
         /// <summary>
         /// Invokes this method using the given object's members as arguments.
@@ -216,7 +173,7 @@ namespace ReflectionExtensions
             }
         }
 
-        private T CastOrThrow<T>(object value)
+        private static T CastOrThrow<T>(object value)
         {
             try
             {
@@ -224,7 +181,7 @@ namespace ReflectionExtensions
             }
             catch (InvalidCastException e)
             {
-                throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(T)), "TReturn", e);
+                throw new TypeArgumentException(string.Format("The returned value from the method cannot be cast into the given type. ({0})", typeof(T)), "T", e);
             }
         }
 
@@ -310,7 +267,7 @@ namespace ReflectionExtensions
         /// <returns>
         /// Returns true if this object object is equal to the other object, otherwise false.
         /// </returns>
-        public bool Equals(IMember other)
+        public override bool Equals(IMember other)
         {
             if (other is IMethod)
             {

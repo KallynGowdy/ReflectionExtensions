@@ -14,38 +14,42 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReflectionExtensions
 {
     /// <summary>
     /// Defines a class for a generic parameter.
     /// </summary>
-    public class GenericParameter : IGenericParameter
+    public class GenericParameter : MemberBase, IGenericParameter
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="GenericParameter"/> class.
         /// </summary>
         /// <param name="type">The type that the parameter represents..</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
-        public GenericParameter(Type type)
+        public GenericParameter(Type type) : base(type, type.Wrap())
         {
-            Contract.Requires(type != null);
-            Contract.Requires(type.IsGenericParameter);
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+            if (!type.IsGenericParameter)
+            {
+                throw new ArgumentException("The given type must be a generic parameter.", "type");
+            }
 
             Position = type.GenericParameterPosition;
-            Name = type.Name;
-            EnclosingType = type.DeclaringType;
             BuildConstraints(type);
         }
 
         private void BuildConstraints(Type type)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
+            if(type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
             List<IGenericConstraint> constraints = new List<IGenericConstraint>();
 
 
@@ -106,47 +110,13 @@ namespace ReflectionExtensions
         }
 
         /// <summary>
-        /// Gets the name of the member.
-        /// </summary>
-        public string Name
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the type that this member uses.
-        /// Returns the return type for methods, null if the return type is void.
-        /// Returns the field/property type for fields/properties.
-        /// Returns the enclosing type for constructors.
-        /// Returns the accepted type for parameters.
-        /// Returns null for generic parameters.
-        /// </summary>
-        public Type ReturnType
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets the type that this member belongs to.
-        /// </summary>
-        public Type EnclosingType
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// Determines if this <see cref="GenericParameter"/> object equals the given <see cref="IMember"/> object.
         /// </summary>
         /// <param name="other">The <see cref="IMember"/> object to compare with this object.</param>
         /// <returns>
         /// Returns true if this object object is equal to the other object, otherwise false.
         /// </returns>
-        public bool Equals(IMember other)
+        public override bool Equals(IMember other)
         {
             if (other is IGenericParameter)
             {
@@ -154,7 +124,7 @@ namespace ReflectionExtensions
             }
             else
             {
-                return base.Equals(other);
+                return false;
             }
         }
 
